@@ -1,0 +1,17 @@
+# ------- Windows -------
+# thumbnails
+Thumbs.db
+# shortcuts
+*.lnk
+
+# ------- Linux -------
+.fuse_hidden*
+#vim
+*.swp
+#gedit
+*~
+#Libre Office
+.~lock.*
+
+# ------- Mac OS -------
+.DS_Store
