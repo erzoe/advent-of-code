@@ -15,3 +15,8 @@ Thumbs.db
 
 # ------- Mac OS -------
 .DS_Store
+
+
+
+# ------- rust -------
+target/
