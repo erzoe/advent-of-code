@@ -41,7 +41,7 @@ fn main() {
 impl Number {
     fn is_adjacent(&self, symbol: &Symbol) -> bool {
         // using +1 on other side to prevent panic from 0-1
-        symbol.column + 1 >= self.start_column && symbol.column + 1 < self.end_column
+        symbol.column + 1 >= self.start_column && symbol.column < self.end_column + 1
     }
 }
 
