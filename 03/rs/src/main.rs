@@ -34,7 +34,7 @@ struct EnginePlan {
 }
 
 fn main() {
-    let engine_plan = EnginePlan::read("../../exp");
+    let engine_plan = EnginePlan::read("../../input");
     println!("sum of part numbers: {}", engine_plan.sum_part_numbers());
 }
 
