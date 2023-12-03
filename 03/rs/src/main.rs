@@ -53,6 +53,9 @@ impl Row {
         for caps in RE_LINE.captures_iter(ln) {
             if let Some(m) = caps.name("symbol") {
                 out.symbols.push(Symbol{symbol: m.as_str().chars().next().unwrap(), column: m.start()});
+                if last_match == FieldType::Number {
+                    out.numbers.last_mut().unwrap().is_part_number = true;
+                }
                 last_match = FieldType::Symbol;
             } else if let Some(m) = caps.name("number") {
                 out.numbers.push(Number{number: m.as_str().parse().unwrap(), start_column: m.start(), end_column: m.end(), is_part_number: last_match == FieldType::Symbol});
