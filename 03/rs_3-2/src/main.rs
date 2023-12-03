@@ -15,6 +15,7 @@ enum FieldType {
 struct Symbol {
     symbol: char,
     column: usize,
+    adjacent_numbers: Vec<u32>,
 }
 
 struct Number {
@@ -35,9 +36,33 @@ struct EnginePlan {
 
 fn main() {
     let engine_plan = EnginePlan::read("../../input");
-    println!("sum of part numbers: {}", engine_plan.sum_part_numbers());
+    let mut result: u32 = 0;
+    for row in engine_plan.rows {
+        for part in row.symbols {
+            if part.is_gear() {
+                let ratio = part.get_gear_ratio();
+                println!("gear: {:?} => {}", part.adjacent_numbers, ratio);
+                result += ratio;
+            }
+        }
+    }
+    println!("sum of gear ratios: {}", result);
 }
 
+
+impl Symbol {
+    fn is_gear(&self) -> bool {
+        assert!(self.adjacent_numbers.len() <= 2);
+        self.symbol == '*' && self.adjacent_numbers.len() == 2
+    }
+    fn get_gear_ratio(&self) -> u32 {
+        if self.is_gear() {
+            self.adjacent_numbers[0] * self.adjacent_numbers[1]
+        } else {
+            0
+        }
+    }
+}
 impl Number {
     fn is_adjacent(&self, symbol: &Symbol) -> bool {
         // using +1 on other side to prevent panic from 0-1
@@ -52,13 +77,17 @@ impl Row {
         let mut last_match = FieldType::Empty;
         for caps in RE_LINE.captures_iter(ln) {
             if let Some(m) = caps.name("symbol") {
-                out.symbols.push(Symbol{symbol: m.as_str().chars().next().unwrap(), column: m.start()});
+                out.symbols.push(Symbol{symbol: m.as_str().chars().next().unwrap(), column: m.start(), adjacent_numbers: Vec::new()});
                 if last_match == FieldType::Number {
                     out.numbers.last_mut().unwrap().is_part_number = true;
+                    out.symbols.last_mut().unwrap().adjacent_numbers.push(out.numbers.last().unwrap().number);
                 }
                 last_match = FieldType::Symbol;
             } else if let Some(m) = caps.name("number") {
                 out.numbers.push(Number{number: m.as_str().parse().unwrap(), start_column: m.start(), end_column: m.end(), is_part_number: last_match == FieldType::Symbol});
+                if last_match == FieldType::Symbol {
+                    out.symbols.last_mut().unwrap().adjacent_numbers.push(out.numbers.last().unwrap().number);
+                }
                 last_match = FieldType::Number;
             } else {
                 last_match = FieldType::Empty;
@@ -68,27 +97,23 @@ impl Row {
     }
     fn check_part_numbers(&mut self, last_row: &mut Row) {
         for number in &mut self.numbers {
-            if last_row.has_corresponding_symbol(number) {
-                number.is_part_number = true;
+            for symbol in &mut last_row.symbols {
+                if number.is_adjacent(&symbol) {
+                    number.is_part_number = true;
+                    symbol.adjacent_numbers.push(number.number);
+                }
             }
         }
-        for symbol in &self.symbols {
+        for symbol in &mut self.symbols {
             last_row.set_is_part_number_for_adjacent_numbers(symbol);
         }
     }
 
-    fn has_corresponding_symbol(&self, number: &Number) -> bool {
-        for symbol in &self.symbols {
-            if number.is_adjacent(symbol) {
-                return true;
-            }
-        }
-        false
-    }
-    fn set_is_part_number_for_adjacent_numbers(&mut self, symbol: &Symbol)  {
+    fn set_is_part_number_for_adjacent_numbers(&mut self, symbol: &mut Symbol)  {
         for number in &mut self.numbers {
             if number.is_adjacent(symbol) {
                 number.is_part_number = true;
+                symbol.adjacent_numbers.push(number.number);
             }
         }
     }
@@ -141,42 +166,42 @@ mod tests {
 
     #[test]
     fn test_not_adjacent_symbol_left () {
-        let s = Symbol{symbol: '*', column: 0};
+        let s = Symbol{symbol: '*', column: 0, adjacent_numbers: Vec::new()};
         let n = Number{number: 42, start_column: 2, end_column: 4, is_part_number: false};
         assert!(!n.is_adjacent(&s));
     }
 
     #[test]
     fn test_adjacent_symbol_diagonal_left () {
-        let s = Symbol{symbol: '*', column: 1};
+        let s = Symbol{symbol: '*', column: 1, adjacent_numbers: Vec::new()};
         let n = Number{number: 42, start_column: 2, end_column: 4, is_part_number: false};
         assert!(n.is_adjacent(&s));
     }
 
     #[test]
     fn test_adjacent_symbol_above_start () {
-        let s = Symbol{symbol: '*', column: 2};
+        let s = Symbol{symbol: '*', column: 2, adjacent_numbers: Vec::new()};
         let n = Number{number: 42, start_column: 2, end_column: 4, is_part_number: false};
         assert!(n.is_adjacent(&s));
     }
 
     #[test]
     fn test_adjacent_symbol_above_end () {
-        let s = Symbol{symbol: '*', column: 3};
+        let s = Symbol{symbol: '*', column: 3, adjacent_numbers: Vec::new()};
         let n = Number{number: 42, start_column: 2, end_column: 4, is_part_number: false};
         assert!(n.is_adjacent(&s));
     }
 
     #[test]
     fn test_adjacent_symbol_diagonal_right () {
-        let s = Symbol{symbol: '*', column: 4};
+        let s = Symbol{symbol: '*', column: 4, adjacent_numbers: Vec::new()};
         let n = Number{number: 42, start_column: 2, end_column: 4, is_part_number: false};
         assert!(n.is_adjacent(&s));
     }
 
     #[test]
     fn test_not_adjacent_symbol_right () {
-        let s = Symbol{symbol: '*', column: 5};
+        let s = Symbol{symbol: '*', column: 5, adjacent_numbers: Vec::new()};
         let n = Number{number: 42, start_column: 2, end_column: 4, is_part_number: false};
         assert!(!n.is_adjacent(&s));
     }
