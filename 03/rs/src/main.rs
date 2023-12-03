@@ -93,12 +93,15 @@ impl Row {
 
 impl EnginePlan {
     fn read(filename: &str) -> Self {
-        Self::parse(BufReader::new(File::open(filename).unwrap_or_else(|_| {panic!("input file '{0}' does not exist", filename)})))
+        let file = File::open(filename).unwrap_or_else(|_| {panic!("input file '{0}' does not exist", filename)});
+        let reader = BufReader::new(file);
+        Self::parse(reader.lines().map(|ln| ln.unwrap()))
     }
-    fn parse(reader: BufReader<File>) -> Self {
+    fn parse(lines: impl IntoIterator<Item = String>) -> Self
+    {
         let mut out = Self { rows: Vec::new() };
-        for line in reader.lines() {
-            let mut row = Row::parse(&line.unwrap());
+        for line in lines {
+            let mut row = Row::parse(&line);
             if let Some(last_row) = out.rows.last_mut() {
                 row.check_part_numbers(last_row)
             }
@@ -131,6 +134,7 @@ impl EnginePlan {
 mod tests {
     use crate::Number;
     use crate::Symbol;
+    use crate::EnginePlan;
 
     #[test]
     fn test_not_adjacent_symbol_left () {
@@ -172,5 +176,30 @@ mod tests {
         let s = Symbol{symbol: '*', column: 5};
         let n = Number{number: 42, start_column: 2, end_column: 4, is_part_number: false};
         assert!(!n.is_adjacent(&s));
+    }
+
+
+    #[test]
+    fn test__engine_plan__not_adjacent_symbol_left () {
+        let p = EnginePlan::parse(["*.42...".to_string()]);
+        assert_eq!(p.sum_part_numbers(), 0);
+    }
+
+    #[test]
+    fn test__engine_plan__adjacent_symbol_left () {
+        let p = EnginePlan::parse(["*42...".to_string()]);
+        assert_eq!(p.sum_part_numbers(), 42);
+    }
+
+    #[test]
+    fn test__engine_plan__adjacent_symbol_right () {
+        let p = EnginePlan::parse([".42*..".to_string()]);
+        assert_eq!(p.sum_part_numbers(), 42);
+    }
+
+    #[test]
+    fn test__engine_plan__not_adjacent_symbol_right () {
+        let p = EnginePlan::parse([".42.*..".to_string()]);
+        assert_eq!(p.sum_part_numbers(), 0);
     }
 }
