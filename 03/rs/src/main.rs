@@ -122,3 +122,55 @@ impl EnginePlan {
         sum
     }
 }
+
+
+
+// ========== tests ==========
+
+#[cfg(test)]
+mod tests {
+    use crate::Number;
+    use crate::Symbol;
+
+    #[test]
+    fn test_not_adjacent_symbol_left () {
+        let s = Symbol{symbol: '*', column: 0};
+        let n = Number{number: 42, start_column: 2, end_column: 4, is_part_number: false};
+        assert!(!n.is_adjacent(&s));
+    }
+
+    #[test]
+    fn test_adjacent_symbol_diagonal_left () {
+        let s = Symbol{symbol: '*', column: 1};
+        let n = Number{number: 42, start_column: 2, end_column: 4, is_part_number: false};
+        assert!(n.is_adjacent(&s));
+    }
+
+    #[test]
+    fn test_adjacent_symbol_above_start () {
+        let s = Symbol{symbol: '*', column: 2};
+        let n = Number{number: 42, start_column: 2, end_column: 4, is_part_number: false};
+        assert!(n.is_adjacent(&s));
+    }
+
+    #[test]
+    fn test_adjacent_symbol_above_end () {
+        let s = Symbol{symbol: '*', column: 3};
+        let n = Number{number: 42, start_column: 2, end_column: 4, is_part_number: false};
+        assert!(n.is_adjacent(&s));
+    }
+
+    #[test]
+    fn test_adjacent_symbol_diagonal_right () {
+        let s = Symbol{symbol: '*', column: 4};
+        let n = Number{number: 42, start_column: 2, end_column: 4, is_part_number: false};
+        assert!(n.is_adjacent(&s));
+    }
+
+    #[test]
+    fn test_not_adjacent_symbol_right () {
+        let s = Symbol{symbol: '*', column: 5};
+        let n = Number{number: 42, start_column: 2, end_column: 4, is_part_number: false};
+        assert!(!n.is_adjacent(&s));
+    }
+}
