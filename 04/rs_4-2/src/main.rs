@@ -11,14 +11,14 @@ struct Card {
 }
 
 struct Copies {
-    copies: Vec<u8>,
+    copies: Vec<u32>,
 }
 
 fn main() {
-    let filename = "../../exp2";
+    let filename = "../../input";
     let file = File::open(filename).unwrap_or_else(|_| panic!("input file '{filename}' does not exist"));
     let reader = BufReader::new(file);
-    let mut number_scratch_cards = 0;
+    let mut number_scratch_cards: u32 = 0;
     let mut copies = Copies::new();
     for ln in reader.lines() {
         let card = Card::parse(&ln.unwrap());
@@ -26,8 +26,8 @@ fn main() {
         for _ in 0..copies.pop_copies() {
             number_scratch_cards += 1;
             copies.add_copies(n);
-            println!("{card} => {n}");
-            println!("        copies: {0:?}", copies.copies);
+            //println!("{card} => {n}");
+            //println!("        copies: {0:?}", copies.copies);
         }
     }
     println!("number of scratch cards: {number_scratch_cards}");
@@ -79,11 +79,11 @@ impl Copies {
         }
     }
 
-    fn get_copies(&self) -> u8 {
+    fn get_copies(&self) -> u32 {
         self.copies.first().unwrap_or(&0) + 1
     }
 
-    fn pop_copies(&mut self) -> u8 {
+    fn pop_copies(&mut self) -> u32 {
         let out = self.get_copies();
         self.del();
         out
