@@ -3,9 +3,9 @@ use std::io::BufReader;
 use std::io::BufRead;
 
 struct MapEntry {
-    dst: u32,
-    src: u32,
-    len: u32,
+    dst: u64,
+    src: u64,
+    len: u64,
 }
 
 struct Map {
@@ -13,7 +13,7 @@ struct Map {
 }
 
 fn main() {
-    let file = File::open("../../exp").unwrap_or_else(|_| panic!("file not found"));
+    let file = File::open("../../input").unwrap_or_else(|_| panic!("file not found"));
     let reader = BufReader::new(file);
     let mut iterator = reader.lines().map(|ln| ln.unwrap());
     let start_seeds = parse_start_seeds(&iterator.next().expect("file is empty"));
@@ -30,7 +30,7 @@ fn main() {
         }
     }
 
-    let mut min_location = u32::MAX;
+    let mut min_location = u64::MAX;
     for seed in start_seeds {
         let mut result = seed;
         for map in &maps {
@@ -43,17 +43,17 @@ fn main() {
     println!("min_location: {min_location}");
 }
 
-fn parse_start_seeds(ln: &str) -> Vec<u32> {
+fn parse_start_seeds(ln: &str) -> Vec<u64> {
     let (_, seeds) = ln.split_once(": ").expect("failed to split first line");
-    seeds.split(' ').map(|s| s.parse::<u32>().expect("failed to parse start seed")).collect()
+    seeds.split(' ').map(|s| s.parse::<u64>().expect("failed to parse start seed")).collect()
 }
 
 impl MapEntry {
     fn parse(ln: &str) -> Self {
         let mut s = ln.split(' ');
-        let dst = s.next().expect("missing destination range start").parse::<u32>().expect("failed to parse destination range start");
-        let src = s.next().expect("missing source range start").parse::<u32>().expect("failed to parse source range start");
-        let len = s.next().expect("missing range length").parse::<u32>().expect("failed to parse range length");
+        let dst = s.next().expect("missing destination range start").parse::<u64>().expect("failed to parse destination range start");
+        let src = s.next().expect("missing source range start").parse::<u64>().expect("failed to parse source range start");
+        let len = s.next().expect("missing range length").parse::<u64>().expect("failed to parse range length");
         if let Some(_value) = s.next() {
             panic!("unexpected value after range length in line {ln}");
         }
@@ -65,7 +65,7 @@ impl Map {
     fn new() -> Self {
         Self { entries: Vec::new() }
     }
-    fn lookup(&self, val: u32) -> u32 {
+    fn lookup(&self, val: u64) -> u64 {
         for entry in &self.entries {
             if entry.src <= val && val < entry.src + entry.len {
                 return val - entry.src + entry.dst;
