@@ -2,6 +2,8 @@ use std::fs::File;
 use std::io::BufReader;
 use std::io::BufRead;
 
+//WARNING: don't run this code. It takes hours to find the correct solution like this.
+
 struct MapEntry {
     dst: u64,
     src: u64,
@@ -17,7 +19,7 @@ fn main() {
     let reader = BufReader::new(file);
     let mut iterator = reader.lines().map(|ln| ln.unwrap());
     let start_seeds = parse_start_seeds(&iterator.next().expect("file is empty"));
-    println!("start_seeds: {start_seeds:?}");
+    //println!("start_seeds: {start_seeds:?}");
 
     let mut maps = Vec::<Map>::new();
 
@@ -40,6 +42,7 @@ fn main() {
         }
         if result < min_location {
             min_location = result;
+            println!("found new nearer location: {min_location}");
         }
     }
     println!("min_location: {min_location}");
