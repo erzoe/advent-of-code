@@ -17,6 +17,8 @@ fn main() {
     let reader = BufReader::new(file);
     let mut iterator = reader.lines().map(|ln| ln.unwrap());
     let start_seeds = parse_start_seeds(&iterator.next().expect("file is empty"));
+    println!("start_seeds: {start_seeds:?}");
+
     let mut maps = Vec::<Map>::new();
 
     for ln in iterator {
@@ -45,7 +47,16 @@ fn main() {
 
 fn parse_start_seeds(ln: &str) -> Vec<u64> {
     let (_, seeds) = ln.split_once(": ").expect("failed to split first line");
-    seeds.split(' ').map(|s| s.parse::<u64>().expect("failed to parse start seed")).collect()
+    let mut seeds_iterator = seeds.split(' ');
+    let mut out = Vec::new();
+    while let Some(seed_str) = seeds_iterator.next() {
+        let start = seed_str.parse::<u64>().expect("failed to parse start seed");
+        let len = seeds_iterator.next().expect("missing length in start seeds range").parse::<u64>().expect("failed to parse start seed length");
+        for i in start..start+len {
+            out.push(i);
+        }
+    }
+    out
 }
 
 impl MapEntry {
