@@ -10,18 +10,27 @@ struct Card {
     drawn_numbers: Vec<u8>,
 }
 
+struct Copies {
+    copies: Vec<u8>,
+}
+
 fn main() {
     let filename = "../../exp2";
     let file = File::open(filename).unwrap_or_else(|_| panic!("input file '{filename}' does not exist"));
     let reader = BufReader::new(file);
-    let mut result = 0;
+    let mut number_scratch_cards = 0;
+    let mut copies = Copies::new();
     for ln in reader.lines() {
         let card = Card::parse(&ln.unwrap());
-        let points = card.get_points();
-        println!("{card} => {points}");
-        result += points;
+        let n = card.count_winning_numbers();
+        for _ in 0..copies.pop_copies() {
+            number_scratch_cards += 1;
+            copies.add_copies(n);
+            println!("{card} => {n}");
+            println!("        copies: {0:?}", copies.copies);
+        }
     }
-    println!("sum of winning points: {result}");
+    println!("number of scratch cards: {number_scratch_cards}");
 }
 
 impl Card {
@@ -38,14 +47,46 @@ impl Card {
         numbers.trim().replace("  ", " ").split(' ').map(|n| n.parse().expect("failed to parse number")).collect()
     }
 
-    fn get_points(&self) -> u32 {
+    fn count_winning_numbers(&self) -> u8 {
         let mut count: u8 = 0;
         for n in &self.drawn_numbers {
             if self.winning_numbers.contains(n) {
                 count += 1;
             }
         }
-        (1 << count) >> 1
+        count
+    }
+}
+
+impl Copies {
+    fn new() -> Self {
+        Self { copies: Vec::new() }
+    }
+
+    fn del(&mut self) {
+        if !self.copies.is_empty() {
+            self.copies.remove(0);
+        }
+    }
+
+    fn add_copies(&mut self, n: u8) {
+        for i in 0..n as usize {
+            if self.copies.len() > i {
+                self.copies[i] += 1;
+            } else {
+                self.copies.push(1)
+            }
+        }
+    }
+
+    fn get_copies(&self) -> u8 {
+        self.copies.first().unwrap_or(&0) + 1
+    }
+
+    fn pop_copies(&mut self) -> u8 {
+        let out = self.get_copies();
+        self.del();
+        out
     }
 }
 
