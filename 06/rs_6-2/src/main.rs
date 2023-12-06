@@ -3,8 +3,8 @@ use std::io::BufReader;
 use std::io::BufRead;
 
 struct Record {
-    time: u32,
-    distance: u32,
+    time: u64,
+    distance: u64,
 }
 
 struct Records {
@@ -13,7 +13,7 @@ struct Records {
 
 fn main() {
     let records = Records::read("../../input");
-    let mut result: u32 = 1;
+    let mut result: u64 = 1;
 
     for r in records.records {
         let mut number_of_possibilities_that_would_beat_the_highscore = 0;
@@ -28,7 +28,7 @@ fn main() {
     println!("result: {result}");
 }
 
-fn calc_range_in_mm(time_race_in_ms: u32, time_press_button_in_ms: u32) -> u32 {
+fn calc_range_in_mm(time_race_in_ms: u64, time_press_button_in_ms: u64) -> u64 {
     let time_driving_in_ms = time_race_in_ms - time_press_button_in_ms;
     let speed_in_mm_per_ms = time_press_button_in_ms;
     speed_in_mm_per_ms * time_driving_in_ms
@@ -43,8 +43,10 @@ impl Records {
     fn parse(lines: Vec<String>) -> Self {
         let times = lines[0].strip_prefix("Time: ").expect("unexpected first line").trim();
         let distances = lines[1].strip_prefix("Distance: ").expect("unexpected second line").trim();
-        let times: Vec<u32> = times.split_whitespace().map(|n| n.parse().expect("failed to parse number")).collect();
-        let distances: Vec<u32> = distances.split_whitespace().map(|n| n.parse().expect("failed to parse number")).collect();
+        let times = times.replace(" ", "");
+        let distances = distances.replace(" ", "");
+        let times: Vec<u64> = times.split_whitespace().map(|n| n.parse().expect("failed to parse number")).collect();
+        let distances: Vec<u64> = distances.split_whitespace().map(|n| n.parse().expect("failed to parse number")).collect();
 
         if times.len() != distances.len() {
             panic!("different number of times and distances given");
