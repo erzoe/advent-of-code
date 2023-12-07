@@ -33,7 +33,7 @@ struct HandAndBit {
 
 
 fn main() {
-    let file = File::open("../../exp").expect("input file does not exist");
+    let file = File::open("../../input").expect("input file does not exist");
     let reader = BufReader::new(file);
     let mut hands_and_bits = Vec::new();
     for ln in reader.lines().map(|ln| ln.unwrap()) {
