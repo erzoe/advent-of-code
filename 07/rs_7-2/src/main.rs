@@ -117,10 +117,12 @@ impl Hand {
                     if let Some(c) = found_pair {
                         if card == joker || c == joker {
                             return Type::FourOfAKind;
-                        } else if contains_joker {
-                            return Type::FullHouse;
                         } else if c != card {
-                            return Type::TwoPair;
+                            if contains_joker {
+                                return Type::FullHouse;
+                            } else {
+                                return Type::TwoPair;
+                            }
                         }
                     }
                     found_pair = Some(card);
