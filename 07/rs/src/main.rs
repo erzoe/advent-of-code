@@ -2,22 +2,12 @@ use std::fs::File;
 use std::io::BufRead;
 use std::io::BufReader;
 use std::cmp::Ordering;
+use std::fmt;
 
-#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug)]
-enum Card {
-    Ace,
-    King,
-    Queen,
-    Jack,
-    Ten,
-    Nine,
-    Eight,
-    Seven,
-    Six,
-    Five,
-    Four,
-    Three,
-    Two,
+#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+struct Card {
+    symbol: char,
+    index: usize,
 }
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug)]
@@ -55,7 +45,7 @@ fn main() {
         let rank = index + 1;
         let bit = item.bit;
         let win = rank as u32 * bit;
-        println!("{rank} x {bit} = {win}");
+        println!("{}: {rank} x {bit} = {win}", item.hand);
         result += win;
     }
     println!("result = {result}");
@@ -145,23 +135,32 @@ impl PartialOrd for Hand {
     }
 }
 
+impl fmt::Display for Hand {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.cards.iter().map(|c| c.symbol.to_string()).collect::<Vec<String>>().join(""))
+    }
+}
+
 impl Card {
+    const SYMBOLS: &str = "AKQJT98765432";
+
     fn parse(symbol: char) -> Self {
-        match symbol {
-            'A' => Self::Ace,
-            'K' => Self::King,
-            'Q' => Self::Queen,
-            'J' => Self::Jack,
-            'T' => Self::Ten,
-            '9' => Self::Nine,
-            '8' => Self::Eight,
-            '7' => Self::Seven,
-            '6' => Self::Six,
-            '5' => Self::Five,
-            '4' => Self::Four,
-            '3' => Self::Three,
-            '2' => Self::Two,
-            _ => panic!("unknown card symbol '{symbol}'"),
+        if let Some(index) = Self::SYMBOLS.find(symbol) {
+            Self { symbol, index }
+        } else {
+            panic!("unknown card '{symbol}'");
         }
+    }
+}
+
+impl Ord for Card {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.index.cmp(&other.index)
+    }
+}
+
+impl PartialOrd for Card {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(&other))
     }
 }
