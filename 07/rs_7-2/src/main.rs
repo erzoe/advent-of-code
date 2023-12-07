@@ -292,6 +292,7 @@ mod tests {
 
     #[test]
     fn test_type_with_joker () {
+        assert_type!("JJJJJ", Type::FiveOfAKind);
         assert_type!("J2222", Type::FiveOfAKind);
         assert_type!("2222J", Type::FiveOfAKind);
         assert_type!("222J2", Type::FiveOfAKind);
