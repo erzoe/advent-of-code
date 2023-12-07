@@ -33,7 +33,7 @@ struct HandAndBit {
 
 
 fn main() {
-    let file = File::open("../../input").expect("input file does not exist");
+    let file = File::open("../../exp").expect("input file does not exist");
     let reader = BufReader::new(file);
     let mut hands_and_bits = Vec::new();
     for ln in reader.lines().map(|ln| ln.unwrap()) {
@@ -79,27 +79,47 @@ impl Hand {
     fn get_type(&self) -> Type {
         let mut found_pair: Option<Card> = None;
         let mut found_three: Option<Card> = None;
+        let joker = Card::parse('J');
+        let contains_joker = self.cards.contains(&joker);
         for card in self.cards {
             match self.cards.iter().filter(|&&c| c == card).count() {
                 5 => {
                     return Type::FiveOfAKind;
                 }
                 4 => {
-                    return Type::FourOfAKind;
+                    if contains_joker {
+                        // it does not matter whether the 4 equal cards are jokers and change into the remaining card
+                        // or if the remaining card is a joker and changes into the four other cards
+                        return Type::FiveOfAKind;
+                    } else {
+                        return Type::FourOfAKind;
+                    }
                 }
                 3 => {
                     if found_pair.is_some() {
-                        return Type::FullHouse;
+                        if contains_joker {
+                            return Type::FiveOfAKind;
+                        } else {
+                            return Type::FullHouse;
+                        }
                     } else {
                         found_three = Some(card);
                     }
                 }
                 2 => {
                     if found_three.is_some() {
-                        return Type::FullHouse;
+                        if contains_joker {
+                            return Type::FiveOfAKind;
+                        } else {
+                            return Type::FullHouse;
+                        }
                     }
                     if let Some(c) = found_pair {
-                        if c != card {
+                        if card == joker || c == joker {
+                            return Type::FourOfAKind;
+                        } else if contains_joker {
+                            return Type::FullHouse;
+                        } else if c != card {
                             return Type::TwoPair;
                         }
                     }
@@ -110,12 +130,24 @@ impl Hand {
         }
 
         if found_three.is_some() {
-            return Type::ThreeOfAKind;
+            if contains_joker {
+                return Type::FourOfAKind;
+            } else {
+                return Type::ThreeOfAKind;
+            }
         }
         if found_pair.is_some() {
-            return Type::OnePair;
+            if contains_joker {
+                return Type::ThreeOfAKind;
+            } else {
+                return Type::OnePair;
+            }
         }
-        return Type::HighCard;
+        if contains_joker {
+            Type::OnePair
+        } else {
+            Type::HighCard
+        }
     }
 }
 
@@ -142,7 +174,7 @@ impl fmt::Display for Hand {
 }
 
 impl Card {
-    const SYMBOLS: &str = "23456789TJQKA";
+    const SYMBOLS: &str = "J23456789TQKA";
 
     fn parse(symbol: char) -> Self {
         if let Some(index) = Self::SYMBOLS.find(symbol) {
@@ -184,17 +216,17 @@ mod tests {
 
     #[test]
     fn test_type_KTJJT () {
-        assert_eq!(Hand::parse("KTJJT").get_type(), Type::TwoPair);
+        assert_eq!(Hand::parse("KTJJT").get_type(), Type::FourOfAKind);
     }
 
     #[test]
     fn test_type_T55J5 () {
-        assert_eq!(Hand::parse("T55J5").get_type(), Type::ThreeOfAKind);
+        assert_eq!(Hand::parse("T55J5").get_type(), Type::FourOfAKind);
     }
 
     #[test]
     fn test_type_QQQJA () {
-        assert_eq!(Hand::parse("QQQJA").get_type(), Type::ThreeOfAKind);
+        assert_eq!(Hand::parse("QQQJA").get_type(), Type::FourOfAKind);
     }
 
 
@@ -202,7 +234,7 @@ mod tests {
 
     #[test]
     fn test_type_JQQQJ () {
-        assert_eq!(Hand::parse("JQQQJ").get_type(), Type::FullHouse);
+        assert_eq!(Hand::parse("JQQQJ").get_type(), Type::FiveOfAKind);
     }
 
     #[test]
@@ -225,6 +257,6 @@ mod tests {
 
     #[test]
     fn test_hand_cmp_KTJJT_KK677 () {
-        assert!(Hand::parse("KTJJT") < Hand::parse("KK677"));
+        assert!(Hand::parse("KTJJT") > Hand::parse("KK677"));
     }
 }
