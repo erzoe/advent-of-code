@@ -33,7 +33,7 @@ struct HandAndBid {
 
 
 fn main() {
-    let file = File::open("../../exp").expect("input file does not exist");
+    let file = File::open("../../input").expect("input file does not exist");
     let reader = BufReader::new(file);
     let mut hands_and_bids = Vec::new();
     for ln in reader.lines().map(|ln| ln.unwrap()) {
@@ -115,10 +115,10 @@ impl Hand {
                         }
                     }
                     if let Some(c) = found_pair {
-                        if card == joker || c == joker {
-                            return Type::FourOfAKind;
-                        } else if c != card {
-                            if contains_joker {
+                        if c != card {
+                            if card == joker || c == joker {
+                                return Type::FourOfAKind;
+                            } else if contains_joker {
                                 return Type::FullHouse;
                             } else {
                                 return Type::TwoPair;
@@ -321,6 +321,9 @@ mod tests {
         assert_type!("J2234", Type::ThreeOfAKind);
         assert_type!("J3224", Type::ThreeOfAKind);
         assert_type!("3J224", Type::ThreeOfAKind);
+        assert_type!("J234J", Type::ThreeOfAKind);
+        assert_type!("2J34J", Type::ThreeOfAKind);
+        assert_type!("2J3J4", Type::ThreeOfAKind);
 
         // there is no TwoPair with a joker
 
