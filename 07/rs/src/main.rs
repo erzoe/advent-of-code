@@ -164,3 +164,54 @@ impl PartialOrd for Card {
         Some(self.cmp(&other))
     }
 }
+
+
+
+mod tests {
+    use crate::{Hand, Type};
+
+    // ------- type tests for example -------
+
+    #[test]
+    fn test_type_32T3K () {
+        assert_eq!(Hand::parse("32T3K").get_type(), Type::OnePair);
+    }
+
+    #[test]
+    fn test_type_KK677 () {
+        assert_eq!(Hand::parse("KK677").get_type(), Type::TwoPair);
+    }
+
+    #[test]
+    fn test_type_KTJJT () {
+        assert_eq!(Hand::parse("KTJJT").get_type(), Type::TwoPair);
+    }
+
+    #[test]
+    fn test_type_T55J5 () {
+        assert_eq!(Hand::parse("T55J5").get_type(), Type::ThreeOfAKind);
+    }
+
+    #[test]
+    fn test_type_QQQJA () {
+        assert_eq!(Hand::parse("QQQJA").get_type(), Type::ThreeOfAKind);
+    }
+
+
+    // ------- type tests for other types -------
+
+    #[test]
+    fn test_type_JQQQJ () {
+        assert_eq!(Hand::parse("JQQQJ").get_type(), Type::FullHouse);
+    }
+
+    #[test]
+    fn test_type_QQQQQ () {
+        assert_eq!(Hand::parse("QQQQQ").get_type(), Type::FiveOfAKind);
+    }
+
+    #[test]
+    fn test_type_23456 () {
+        assert_eq!(Hand::parse("23456").get_type(), Type::HighCard);
+    }
+}
