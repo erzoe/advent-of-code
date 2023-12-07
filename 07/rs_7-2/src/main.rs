@@ -204,6 +204,13 @@ impl PartialOrd for Card {
 mod tests {
     use crate::{Hand, Type};
 
+    macro_rules! assert_type {
+        ($input: expr, $expected_type: expr) => {
+            let actual_type = Hand::parse($input).get_type();
+            assert_eq!(actual_type, $expected_type, "\n input: \"{}\"\n", $input);
+        }
+    }
+
     // ------- type tests for example -------
 
     #[test]
@@ -272,6 +279,46 @@ mod tests {
     #[test]
     fn test_type_2444J () {
         assert_eq!(Hand::parse("2444J").get_type(), Type::FourOfAKind);
+    }
+
+    #[test]
+    fn test_type_with_joker () {
+        assert_type!("J2222", Type::FiveOfAKind);
+        assert_type!("2222J", Type::FiveOfAKind);
+        assert_type!("222J2", Type::FiveOfAKind);
+        assert_type!("2J2J2", Type::FiveOfAKind);
+        assert_type!("J222J", Type::FiveOfAKind);
+
+        assert_type!("J3222", Type::FourOfAKind);
+        assert_type!("3J222", Type::FourOfAKind);
+        assert_type!("23J22", Type::FourOfAKind);
+        assert_type!("2J322", Type::FourOfAKind);
+        assert_type!("2J232", Type::FourOfAKind);
+        assert_type!("22J23", Type::FourOfAKind);
+        assert_type!("222J3", Type::FourOfAKind);
+        assert_type!("2223J", Type::FourOfAKind);
+        assert_type!("J323J", Type::FourOfAKind);
+
+        assert_type!("J2233", Type::FullHouse);
+        assert_type!("2233J", Type::FullHouse);
+        assert_type!("22J33", Type::FullHouse);
+        assert_type!("2J323", Type::FullHouse);
+        assert_type!("J2323", Type::FullHouse);
+        assert_type!("2323J", Type::FullHouse);
+
+        assert_type!("2234J", Type::ThreeOfAKind);
+        assert_type!("223J4", Type::ThreeOfAKind);
+        assert_type!("J2234", Type::ThreeOfAKind);
+        assert_type!("J3224", Type::ThreeOfAKind);
+        assert_type!("3J224", Type::ThreeOfAKind);
+
+        // there is no TwoPair with a joker
+
+        assert_type!("2345J", Type::OnePair);
+        assert_type!("J2345", Type::OnePair);
+        assert_type!("23J45", Type::OnePair);
+
+        // there is no HighCard with a joker
     }
 
 
