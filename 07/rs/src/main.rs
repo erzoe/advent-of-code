@@ -214,4 +214,17 @@ mod tests {
     fn test_type_23456 () {
         assert_eq!(Hand::parse("23456").get_type(), Type::HighCard);
     }
+
+
+    // ------- cmp Hand tests for example -------
+
+    #[test]
+    fn test_hand_cmp_T55J5_QQQJA () {
+        assert!(Hand::parse("T55J5") < Hand::parse("QQQJA"));
+    }
+
+    #[test]
+    fn test_hand_cmp_KTJJT_KK677 () {
+        assert!(Hand::parse("KTJJT") < Hand::parse("KK677"));
+    }
 }
