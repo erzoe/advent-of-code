@@ -321,6 +321,44 @@ mod tests {
         // there is no HighCard with a joker
     }
 
+    #[test]
+    fn test_type_without_joker () {
+        assert_type!("99999", Type::FiveOfAKind);
+
+        assert_type!("A9999", Type::FourOfAKind);
+        assert_type!("9999A", Type::FourOfAKind);
+        assert_type!("99A99", Type::FourOfAKind);
+
+        assert_type!("AA999", Type::FullHouse);
+        assert_type!("999AA", Type::FullHouse);
+        assert_type!("9AA99", Type::FullHouse);
+        assert_type!("9A9A9", Type::FullHouse);
+
+        assert_type!("AK999", Type::ThreeOfAKind);
+        assert_type!("999AK", Type::ThreeOfAKind);
+        assert_type!("A999K", Type::ThreeOfAKind);
+        assert_type!("99A9K", Type::ThreeOfAKind);
+        assert_type!("9A9K9", Type::ThreeOfAKind);
+        assert_type!("9AK99", Type::ThreeOfAKind);
+
+        assert_type!("9988K", Type::TwoPair);
+        assert_type!("9898K", Type::TwoPair);
+        assert_type!("9889K", Type::TwoPair);
+        assert_type!("K8899", Type::TwoPair);
+        assert_type!("K9898", Type::TwoPair);
+        assert_type!("K8998", Type::TwoPair);
+        assert_type!("88K99", Type::TwoPair);
+        assert_type!("98K98", Type::TwoPair);
+        assert_type!("89K98", Type::TwoPair);
+
+        assert_type!("234AA", Type::OnePair);
+        assert_type!("AA234", Type::OnePair);
+        assert_type!("A234A", Type::OnePair);
+        assert_type!("2A3A4", Type::OnePair);
+        assert_type!("23AA4", Type::OnePair);
+
+        assert_type!("23456", Type::HighCard);
+    }
 
     // ------- cmp Hand tests for example -------
 
