@@ -238,6 +238,11 @@ mod tests {
     }
 
     #[test]
+    fn test_type_JQQQK () {
+        assert_eq!(Hand::parse("JQQQK").get_type(), Type::FourOfAKind);
+    }
+
+    #[test]
     fn test_type_QQQQQ () {
         assert_eq!(Hand::parse("QQQQQ").get_type(), Type::FiveOfAKind);
     }
@@ -245,6 +250,26 @@ mod tests {
     #[test]
     fn test_type_23456 () {
         assert_eq!(Hand::parse("23456").get_type(), Type::HighCard);
+    }
+
+    #[test]
+    fn test_type_2345J () {
+        assert_eq!(Hand::parse("2345J").get_type(), Type::OnePair);
+    }
+
+    #[test]
+    fn test_type_2245J () {
+        assert_eq!(Hand::parse("2245J").get_type(), Type::ThreeOfAKind);
+    }
+
+    #[test]
+    fn test_type_2244J () {
+        assert_eq!(Hand::parse("2244J").get_type(), Type::FullHouse);
+    }
+
+    #[test]
+    fn test_type_2444J () {
+        assert_eq!(Hand::parse("2444J").get_type(), Type::FourOfAKind);
     }
 
 
