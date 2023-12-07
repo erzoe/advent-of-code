@@ -211,6 +211,15 @@ mod tests {
         }
     }
 
+    macro_rules! assert_cmp {
+        ($hand1: expr, $op: tt, $hand2: expr) => {
+            let hand1 = Hand::parse($hand1);
+            let hand2 = Hand::parse($hand2);
+            assert!(hand1 $op hand2, "FAILED: {hand1} {} {hand2}", stringify!($op));
+        }
+    }
+
+
     // ------- type tests for example -------
 
     #[test]
@@ -370,5 +379,23 @@ mod tests {
     #[test]
     fn test_hand_cmp_KTJJT_KK677 () {
         assert!(Hand::parse("KTJJT") > Hand::parse("KK677"));
+    }
+
+
+    // ------- other cmp Hand tests -------
+
+    #[test]
+    fn test_hand_cmp_many () {
+        assert_cmp!("22222", >, "J2222");
+        assert_cmp!("22222", >, "2J222");
+        assert_cmp!("22222", >, "22J22");
+        assert_cmp!("22222", >, "222J2");
+        assert_cmp!("22222", >, "2222J");
+
+        assert_cmp!("22222", >, "22223");
+        assert_cmp!("32222", >, "22223");
+
+        assert_cmp!("JK222", >, "AK222");
+        assert_cmp!("K2222", >, "JK222");
     }
 }
