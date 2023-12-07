@@ -142,7 +142,7 @@ impl fmt::Display for Hand {
 }
 
 impl Card {
-    const SYMBOLS: &str = "AKQJT98765432";
+    const SYMBOLS: &str = "23456789TJQKA";
 
     fn parse(symbol: char) -> Self {
         if let Some(index) = Self::SYMBOLS.find(symbol) {
