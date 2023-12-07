@@ -26,36 +26,36 @@ struct Hand {
     cards: [Card; 5],
 }
 
-struct HandAndBit {
+struct HandAndBid {
     hand: Hand,
-    bit: u32,
+    bid: u32,
 }
 
 
 fn main() {
     let file = File::open("../../exp").expect("input file does not exist");
     let reader = BufReader::new(file);
-    let mut hands_and_bits = Vec::new();
+    let mut hands_and_bids = Vec::new();
     for ln in reader.lines().map(|ln| ln.unwrap()) {
-        hands_and_bits.push(HandAndBit::parse(&ln));
+        hands_and_bids.push(HandAndBid::parse(&ln));
     }
-    hands_and_bits.sort_by(|a,b| a.hand.cmp(&b.hand));
+    hands_and_bids.sort_by(|a,b| a.hand.cmp(&b.hand));
     let mut result: u32 = 0;
-    for (index, item) in hands_and_bits.into_iter().enumerate() {
+    for (index, item) in hands_and_bids.into_iter().enumerate() {
         let rank = index + 1;
-        let bit = item.bit;
-        let win = rank as u32 * bit;
-        println!("{}: {rank} x {bit} = {win}", item.hand);
+        let bid = item.bid;
+        let win = rank as u32 * bid;
+        println!("{}: {rank} x {bid} = {win}", item.hand);
         result += win;
     }
     println!("result = {result}");
 }
 
 
-impl HandAndBit {
+impl HandAndBid {
     fn parse(ln: &str) -> Self {
-        let (hand, bit) = ln.split_once(' ').expect("Invalid input line, should contain a space to separate hand and bit");
-        Self { hand: Hand::parse(hand), bit: bit.parse().expect("Failed to parse bit") }
+        let (hand, bid) = ln.split_once(' ').expect("Invalid input line, should contain a space to separate hand and bid");
+        Self { hand: Hand::parse(hand), bid: bid.parse().expect("Failed to parse bid") }
     }
 }
 
