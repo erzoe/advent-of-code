@@ -36,7 +36,7 @@ struct Directions {
 
 
 fn main() {
-    let file = BufReader::new(File::open("../../exp_2").expect("input file does not exist"));
+    let file = BufReader::new(File::open("../../input").expect("input file does not exist"));
     let mut lines = file.lines().map(|ln| ln.unwrap());
     let mut directions = Directions::parse(&lines.next().unwrap());
     let nodes = Nodes::parse(lines);
@@ -45,7 +45,7 @@ fn main() {
     let mut count: u32 = 0;
     while !current_nodes.is_goal() {
         let direction = directions.next();
-        println!("{current_nodes} {direction:?}");
+        //println!("{current_nodes} {direction:?}");
         current_nodes.step(&nodes, direction);
         count += 1;
     }
