@@ -42,7 +42,7 @@ fn main() {
     let nodes = Nodes::parse(lines);
 
     let mut current_nodes = nodes.get_start();
-    let mut count: u32 = 0;
+    let mut count: u64 = 0;
     while !current_nodes.is_goal() {
         let direction = directions.next();
         //println!("{current_nodes} {direction:?}");
