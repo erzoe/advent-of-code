@@ -32,6 +32,7 @@ enum Direction {
 struct Directions {
     directions: Vec<Direction>,
     index: usize,
+    len: usize,
 }
 
 
@@ -66,16 +67,19 @@ impl Direction {
 
 impl Directions {
     fn parse(ln: &str) -> Self {
+        let directions: Vec<Direction> = ln.chars().map(Direction::parse).collect();
+        let len = directions.len();
         Self {
+            directions,
+            len,
             index: 0,
-            directions: ln.chars().map(Direction::parse).collect(),
         }
     }
 
     fn next(&mut self) -> Direction {
         let out = self.directions[self.index];
         self.index += 1;
-        if self.index >= self.directions.len() {
+        if self.index >= self.len {
             self.index = 0;
         }
         out
