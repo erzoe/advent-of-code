@@ -1,6 +1,7 @@
 use std::fs::File;
 use std::io::BufReader;
 use std::io::BufRead;
+use std::collections::HashMap;
 use std::fmt;
 
 use regex::Regex;
@@ -15,19 +16,14 @@ struct Node {
     is_end: bool,
 }
 
-struct Link<'a> {
-    this: &'a Node,
-    left: &'a Node,
-    right: &'a Node,
-}
-
 struct Nodes<'a> {
     nodes: Vec<Node>,
-    links: Vec<Link<'a>>,
+    left: HashMap<&'a Node, &'a Node>,
+    right: HashMap<&'a Node, &'a Node>,
 }
 
 struct CurrentNodes<'a> {
-    nodes: Vec<&'a Link<'a>>,
+    nodes: Vec<&'a Node>,
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -92,15 +88,6 @@ impl Directions {
     }
 }
 
-impl Link<'_> {
-    fn get_next(&self, direction: Direction) -> &Node {
-        match direction {
-            Direction::Left => self.left,
-            Direction::Right => self.right,
-        }
-    }
-}
-
 impl fmt::Display for Node {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.name)
@@ -111,7 +98,8 @@ impl Nodes<'_> {
     fn parse(lines: impl Iterator<Item=String>) -> Self {
         let lines: Vec<String> = lines.filter(|ln| !ln.is_empty()).collect();
         let mut nodes = Vec::<Node>::new();
-        let mut links: Vec<Link> = Vec::new();
+        let mut left = HashMap::<&Node, &Node>::new();
+        let mut right = HashMap::<&Node, &Node>::new();
         for ln in lines {
             let caps = RE_NODE_LINE.captures(&ln).expect("Invlid line for node");
             let name = caps.name("name").unwrap().as_str().to_string();
@@ -120,29 +108,34 @@ impl Nodes<'_> {
         for ln in lines {
             let caps = RE_NODE_LINE.captures(&ln).expect("Invlid line for node");
             let name = caps.name("name").unwrap().as_str().to_string();
-            let left = caps.name("left").unwrap().as_str().to_string();
-            let right = caps.name("right").unwrap().as_str().to_string();
-            links.push(Link {
-                this:  nodes.iter().find(|n| n.name == name).unwrap(),
-                left:  nodes.iter().find(|n| n.name == left).unwrap(),
-                right: nodes.iter().find(|n| n.name == right).unwrap(),
-            })
+            let name_left = caps.name("left").unwrap().as_str().to_string();
+            let name_right = caps.name("right").unwrap().as_str().to_string();
+
+            let this =  nodes.iter().find(|n| n.name == name).unwrap();
+            let node_left =  nodes.iter().find(|n| n.name == name_left).unwrap();
+            let node_right = nodes.iter().find(|n| n.name == name_right).unwrap();
+
+            left[&this] = &node_left;
+            right[&this] = &node_right;
         }
-        Self { nodes, links }
+        Self { nodes, left, right }
     }
 
     fn get_start(&self) -> CurrentNodes {
-        CurrentNodes { nodes: self.links.iter().filter(|n| n.this.is_start).collect() }
+        CurrentNodes { nodes: self.nodes.iter().filter(|n| n.is_start).collect() }
     }
 
-    fn get_next(&self, current_node: &Link, direction: Direction) -> &Node {
-        &current_node.get_next(direction)
+    fn get_next(&self, current_node: &Node, direction: Direction) -> &Node {
+        match direction {
+            Direction::Left => self.left[&current_node],
+            Direction::Right => self.right[&current_node],
+        }
     }
 }
 
 impl<'a> CurrentNodes<'a> {
     fn is_goal(&self) -> bool {
-        self.nodes.iter().all(|n| n.this.is_end)
+        self.nodes.iter().all(|n| n.is_end)
     }
 
     fn step(&mut self, nodes: &'a Nodes, direction: Direction) {
