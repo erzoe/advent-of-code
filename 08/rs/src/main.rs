@@ -2,6 +2,7 @@ use std::fs::File;
 use std::io::BufReader;
 use std::io::BufRead;
 use std::collections::HashMap;
+use std::fmt;
 
 use regex::Regex;
 use once_cell::sync::Lazy;
@@ -19,7 +20,7 @@ struct Nodes {
     nodes: HashMap<String, Node>,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 enum Direction {
     Left,
     Right,
@@ -39,9 +40,12 @@ fn main() {
     let mut node = nodes.get_start();
     let mut count: u8 = 0;
     while !node.is_goal() {
-        node = nodes.get_next(node, directions.next());
+        let direction = directions.next();
+        println!("{node} {direction:?}");
+        node = nodes.get_next(node, direction);
         count += 1;
     }
+    println!("{}", node);
     println!("number of required steps: {count}");
 }
 
@@ -93,6 +97,11 @@ impl Node {
 
     fn is_goal(&self) -> bool {
         self.name == "ZZZ"
+    }
+}
+impl fmt::Display for Node {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.name)
     }
 }
 
