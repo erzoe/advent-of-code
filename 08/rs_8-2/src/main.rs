@@ -7,7 +7,7 @@ use std::fmt;
 use regex::Regex;
 use once_cell::sync::Lazy;
 
-static RE_NODE_LINE: Lazy::<Regex> = Lazy::new(|| Regex::new(r"^(?<name>[A-Z]+)\s*=\s*\((?<left>[A-Z]+),\s*(?<right>[A-Z]+)\)$").unwrap());
+static RE_NODE_LINE: Lazy::<Regex> = Lazy::new(|| Regex::new(r"^(?<name>[A-Z1-9]+)\s*=\s*\((?<left>[A-Z1-9]+),\s*(?<right>[A-Z1-9]+)\)$").unwrap());
 
 
 struct Node {
@@ -18,6 +18,10 @@ struct Node {
 
 struct Nodes {
     nodes: HashMap<String, Node>,
+}
+
+struct CurrentNodes<'a> {
+    nodes: Vec<&'a Node>,
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -32,20 +36,20 @@ struct Directions {
 
 
 fn main() {
-    let file = BufReader::new(File::open("../../input").expect("input file does not exist"));
+    let file = BufReader::new(File::open("../../exp_2").expect("input file does not exist"));
     let mut lines = file.lines().map(|ln| ln.unwrap());
     let mut directions = Directions::parse(&lines.next().unwrap());
     let nodes = Nodes::parse(lines);
 
-    let mut node = nodes.get_start();
+    let mut current_nodes = nodes.get_start();
     let mut count: u32 = 0;
-    while !node.is_goal() {
+    while !current_nodes.is_goal() {
         let direction = directions.next();
-        println!("{node} {direction:?}");
-        node = nodes.get_next(node, direction);
+        println!("{current_nodes} {direction:?}");
+        current_nodes.step(&nodes, direction);
         count += 1;
     }
-    println!("{}", node);
+    println!("{}", current_nodes);
     println!("number of required steps: {count}");
 }
 
@@ -94,10 +98,6 @@ impl Node {
             Direction::Right => self.right.to_string(),
         }
     }
-
-    fn is_goal(&self) -> bool {
-        self.name == "ZZZ"
-    }
 }
 impl fmt::Display for Node {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -110,11 +110,28 @@ impl Nodes {
         Self { nodes: lines.filter(|ln| !ln.is_empty()).map(|ln| Node::parse(&ln)).map(|n| (n.name.to_string(), n)).collect() }
     }
 
-    fn get_start(&self) -> &Node {
-        &self.nodes["AAA"]
+    fn get_start(&self) -> CurrentNodes {
+        CurrentNodes { nodes: self.nodes.values().filter(|n| n.name.ends_with('A')).collect() }
     }
 
     fn get_next(&self, current_node: &Node, direction: Direction) -> &Node {
         &self.nodes[&current_node.get_next(direction)]
+    }
+}
+
+impl<'a> CurrentNodes<'a> {
+    fn is_goal(&self) -> bool {
+        self.nodes.iter().all(|n| n.name.ends_with('Z'))
+    }
+
+    fn step(&mut self, nodes: &'a Nodes, direction: Direction) {
+        for i in 0..self.nodes.len() {
+            self.nodes[i] = nodes.get_next(self.nodes[i], direction);
+        }
+    }
+}
+impl fmt::Display for CurrentNodes<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.nodes.iter().map(|n| n.to_string()).collect::<Vec<String>>().join(", "))
     }
 }
