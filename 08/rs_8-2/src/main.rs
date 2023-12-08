@@ -1,7 +1,6 @@
 use std::fs::File;
 use std::io::BufReader;
 use std::io::BufRead;
-use std::collections::HashMap;
 use std::fmt;
 
 use regex::Regex;
@@ -12,16 +11,23 @@ static RE_NODE_LINE: Lazy::<Regex> = Lazy::new(|| Regex::new(r"^(?<name>[A-Z1-9]
 
 struct Node {
     name: String,
-    left: String,
-    right: String,
+    is_start: bool,
+    is_end: bool,
 }
 
-struct Nodes {
-    nodes: HashMap<String, Node>,
+struct Link<'a> {
+    this: &'a Node,
+    left: &'a Node,
+    right: &'a Node,
+}
+
+struct Nodes<'a> {
+    nodes: Vec<Node>,
+    links: Vec<Link<'a>>,
 }
 
 struct CurrentNodes<'a> {
-    nodes: Vec<&'a Node>,
+    nodes: Vec<&'a Link<'a>>,
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -86,46 +92,57 @@ impl Directions {
     }
 }
 
-impl Node {
-    fn parse(ln: &str) -> Self {
-        let caps = RE_NODE_LINE.captures(ln).expect("Invlid line for node");
-        Node {
-            name: caps.name("name").unwrap().as_str().to_string(),
-            left: caps.name("left").unwrap().as_str().to_string(),
-            right: caps.name("right").unwrap().as_str().to_string(),
-        }
-    }
-
-    fn get_next(&self, direction: Direction) -> String {
+impl Link<'_> {
+    fn get_next(&self, direction: Direction) -> &Node {
         match direction {
-            Direction::Left => self.left.to_string(),
-            Direction::Right => self.right.to_string(),
+            Direction::Left => self.left,
+            Direction::Right => self.right,
         }
     }
 }
+
 impl fmt::Display for Node {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.name)
     }
 }
 
-impl Nodes {
+impl Nodes<'_> {
     fn parse(lines: impl Iterator<Item=String>) -> Self {
-        Self { nodes: lines.filter(|ln| !ln.is_empty()).map(|ln| Node::parse(&ln)).map(|n| (n.name.to_string(), n)).collect() }
+        let lines: Vec<String> = lines.filter(|ln| !ln.is_empty()).collect();
+        let mut nodes = Vec::<Node>::new();
+        let mut links: Vec<Link> = Vec::new();
+        for ln in lines {
+            let caps = RE_NODE_LINE.captures(&ln).expect("Invlid line for node");
+            let name = caps.name("name").unwrap().as_str().to_string();
+            nodes.push(Node { name, is_start: name.ends_with('A'), is_end: name.ends_with('Z') });
+        }
+        for ln in lines {
+            let caps = RE_NODE_LINE.captures(&ln).expect("Invlid line for node");
+            let name = caps.name("name").unwrap().as_str().to_string();
+            let left = caps.name("left").unwrap().as_str().to_string();
+            let right = caps.name("right").unwrap().as_str().to_string();
+            links.push(Link {
+                this:  nodes.iter().find(|n| n.name == name).unwrap(),
+                left:  nodes.iter().find(|n| n.name == left).unwrap(),
+                right: nodes.iter().find(|n| n.name == right).unwrap(),
+            })
+        }
+        Self { nodes, links }
     }
 
     fn get_start(&self) -> CurrentNodes {
-        CurrentNodes { nodes: self.nodes.values().filter(|n| n.name.ends_with('A')).collect() }
+        CurrentNodes { nodes: self.links.iter().filter(|n| n.this.is_start).collect() }
     }
 
-    fn get_next(&self, current_node: &Node, direction: Direction) -> &Node {
-        &self.nodes[&current_node.get_next(direction)]
+    fn get_next(&self, current_node: &Link, direction: Direction) -> &Node {
+        &current_node.get_next(direction)
     }
 }
 
 impl<'a> CurrentNodes<'a> {
     fn is_goal(&self) -> bool {
-        self.nodes.iter().all(|n| n.name.ends_with('Z'))
+        self.nodes.iter().all(|n| n.this.is_end)
     }
 
     fn step(&mut self, nodes: &'a Nodes, direction: Direction) {
