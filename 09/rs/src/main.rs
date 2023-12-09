@@ -5,11 +5,11 @@ use std::ops::{Add,Sub};
 use std::fmt::Debug;
 
 fn main() {
-    let file = File::open("../../exp").expect("input file does not exist");
+    let file = File::open("../../input").expect("input file does not exist");
     let reader = BufReader::new(file);
-    let mut result = 0;
+    let mut result: i32 = 0;
     for ln in reader.lines() {
-        let data = ln.unwrap().split_whitespace().map(|item| item.parse().expect("failed to parse number")).collect::<Vec<u32>>();
+        let data = ln.unwrap().split_whitespace().map(|item| item.parse().expect("failed to parse number")).collect::<Vec<i32>>();
         let prediction = predict(&data);
         println!("{:?} {}", data, prediction);
         result += prediction;
@@ -33,7 +33,7 @@ where
         let new = *diffs[i].last().unwrap() + last;
         last = new;
         diffs[i].push(last);
-        println!("    {:?}", diffs[i]);
+        //println!("    {:?}", diffs[i]);
     }
     *diffs.first().unwrap().last().unwrap()
 }
