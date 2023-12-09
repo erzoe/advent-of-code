@@ -1,6 +1,8 @@
 use std::fs::File;
 use std::io::BufReader;
 use std::io::BufRead;
+use std::ops::{Add,Sub};
+use std::fmt::Debug;
 
 fn main() {
     let file = File::open("../../exp").expect("input file does not exist");
@@ -15,16 +17,20 @@ fn main() {
     println!("result: {}", result);
 }
 
-fn predict(data: &[u32]) -> u32 {
+fn predict<T>(data: &[T]) -> T
+where
+    T: Add<Output=T> + Sub<Output=T> + PartialEq + Default + Copy + Debug,
+{
     let mut diffs = Vec::new();
     diffs.push(data.to_owned());
-    while !diffs.last().unwrap().iter().all(|item| *item == 0) {
-        diffs.push( diffs.last().unwrap().iter().zip(diffs.last().unwrap().iter().skip(1)).map(|(current, next)| next - current).collect() );
+    let zero = Default::default();
+    while !diffs.last().unwrap().iter().all(|item| *item == zero) {
+        diffs.push( diffs.last().unwrap().iter().zip(diffs.last().unwrap().iter().skip(1)).map(|(current, next)| *next - *current).collect() );
     }
     let n = diffs.len();
-    let mut last = 0;
+    let mut last: T = zero;
     for i in (0..n).rev() {
-        let new = diffs[i].last().unwrap() + last;
+        let new = *diffs[i].last().unwrap() + last;
         last = new;
         diffs[i].push(last);
         println!("    {:?}", diffs[i]);
