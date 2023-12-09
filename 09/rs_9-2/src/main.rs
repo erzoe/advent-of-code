@@ -10,14 +10,14 @@ fn main() {
     let mut result: i32 = 0;
     for ln in reader.lines() {
         let data = ln.unwrap().split_whitespace().map(|item| item.parse().expect("failed to parse number")).collect::<Vec<i32>>();
-        let prediction = predict(&data);
-        println!("{:?} {}", data, prediction);
+        let prediction = predict_past(&data);
+        println!("{} {:?}", prediction, data);
         result += prediction;
     }
     println!("result: {}", result);
 }
 
-fn predict<T>(data: &[T]) -> T
+fn predict_past<T>(data: &[T]) -> T
 where
     T: Add<Output=T> + Sub<Output=T> + PartialEq + Default + Copy + Debug,
 {
@@ -30,10 +30,10 @@ where
     let n = diffs.len();
     let mut last: T = zero;
     for i in (0..n).rev() {
-        let new = *diffs[i].last().unwrap() + last;
+        let new = *diffs[i].first().unwrap() - last;
         last = new;
-        diffs[i].push(last);
+        diffs[i].insert(0, last);
         //println!("    {:?}", diffs[i]);
     }
-    *diffs.first().unwrap().last().unwrap()
+    *diffs.first().unwrap().first().unwrap()
 }
