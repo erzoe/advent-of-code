@@ -1,14 +1,48 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
+extern crate proc_macro;
+
+use proc_macro::TokenStream;
+use quote::{quote, format_ident};
+use syn::Ident;
+
+use regex::Regex;
+use once_cell::sync::Lazy;
+
+static RE_NODE_LINE: Lazy::<Regex> = Lazy::new(|| Regex::new(r"^(?<name>[A-Z1-9]+)\s*=\s*\((?<left>[A-Z1-9]+),\s*(?<right>[A-Z1-9]+)\)$").unwrap());
+
+
+#[proc_macro]
+pub fn definitions(_input: TokenStream) -> TokenStream {
+    let input = std::fs::read_to_string("../../exp").expect("input file does not exist");
+    let mut nodes = Vec::<Ident>::new();
+    let mut left = Vec::<Ident>::new();
+    let mut right = Vec::<Ident>::new();
+    for ln in input.lines() {
+        let caps = RE_NODE_LINE.captures(ln).expect("Invalid line for node");
+        nodes.push(to_name(caps.name("name").unwrap().as_str().to_string()));
+        left.push(to_name(caps.name("left").unwrap().as_str().to_string()));
+        right.push(to_name(caps.name("right").unwrap().as_str().to_string()));
+    }
+
+    quote!{
+        enum Direction {
+            Left,
+            Right,
+        }
+        enum Nodes {
+            #(#nodes),*
+        }
+
+        impl Nodes {
+            fn next(&self, direction: Direction) -> Self {
+                match (self, direction) {
+                    #( (#nodes, Direction::Left) => Self::#left, )*
+                    #( (#nodes, Direction::Right) => Self::#right, )*
+                }
+            }
+        }
+    }.into()
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
+fn to_name(node: String) -> Ident {
+    format_ident!("N_{}", node)
 }
