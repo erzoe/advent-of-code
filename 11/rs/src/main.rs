@@ -36,6 +36,7 @@ impl Galaxies {
         let mut row = 0;
         let mut col = 0;
         for ln in reader.lines() {
+            col = 0;
             for s in ln.unwrap().chars() {
                 if s == '#' {
                     galaxies.push( Galaxy { row, col } )
