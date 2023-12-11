@@ -2,6 +2,7 @@ use std::fs::File;
 use std::io::BufReader;
 use std::io::BufRead;
 use std::collections::HashMap;
+use std::fmt;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 enum Shape {
@@ -42,6 +43,7 @@ fn main() {
     let file = File::open("../../exp_easy").expect("failed to find input file");
     let reader = BufReader::new(file);
     let map = Map::parse(reader.lines().map(|ln| ln.unwrap()));
+    println!("{}", map);
     let (furthest_cor, furthest_field) = map.map.iter().max_by_key(|(_c, f)| f.distance.unwrap()).unwrap();
     println!("Furthest field: {:?}, {}", furthest_cor, furthest_field.distance.unwrap());
 }
@@ -113,6 +115,22 @@ impl Map {
     }
 }
 
+impl fmt::Display for Map {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        for row in 0..self.rows {
+            for col in 0..self.cols {
+                if let Some(field) = self.map.get(&Cor{row: row.try_into().unwrap(), col: col.try_into().unwrap()}) {
+                    write!(f, "{}", field.shape.to_symbol())?;
+                } else {
+                    write!(f, " ")?;
+                }
+            }
+            writeln!(f)?;
+        }
+        Ok(())
+    }
+}
+
 impl Shape {
     fn parse(symbol: char) -> Self {
         match symbol {
@@ -123,6 +141,17 @@ impl Shape {
             '7' => Self::SW,
             'F' => Self::SE,
             _ => panic!("unexpected symbol '{}'", symbol),
+        }
+    }
+
+    fn to_symbol(self) -> char {
+        match self {
+            Self::NS => '│',
+            Self::WE => '─',
+            Self::NE => '└',
+            Self::NW => '┘',
+            Self::SW => '┐',
+            Self::SE => '┌',
         }
     }
 
