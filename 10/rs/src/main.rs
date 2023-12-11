@@ -76,6 +76,7 @@ impl Map {
 
     fn count_distances(map: &mut HashMap<Cor, Field>, start: Cor) {
         let mut distance = 0;
+        map.entry(start).and_modify(|f| f.distance = Some(distance));
         let mut c1 = start;
         let mut c2 = start;
         let (mut d1, mut d2) = map[&start].shape.to_directions();
@@ -96,9 +97,9 @@ impl Map {
     fn get_next(map: &HashMap<Cor, Field>, cor: Cor, coming_from: Direction) -> (Cor, Direction) {
         let (d1, d2) = map[&cor].shape.to_directions();
         if d1 == coming_from {
-            (cor.step(d2), d2)
+            (cor.step(d2), d2.opposite())
         } else {
-            (cor.step(d1), d1)
+            (cor.step(d1), d1.opposite())
         }
     }
 
