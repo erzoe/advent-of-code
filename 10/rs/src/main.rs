@@ -68,9 +68,7 @@ impl Map {
 
         let mut out = Self { map, rows, cols };
         let start_cor = out.map.iter().flat_map(|row| row.iter()).filter(|f| f.is_some()).map(|f| f.as_ref().unwrap()).find(|f| f.distance == Some(0)).expect("failed to find start field").cor;
-        let start: &mut Field = out.get_mut(start_cor);
-        let connected_to_start = out.get_connected(start.cor);
-        start.shape = Some(out.get_shape_from_neighbours(start.cor));
+        out.set_shape(start_cor, out.get_shape_from_neighbours(start_cor));
 
         out
     }
@@ -87,34 +85,13 @@ impl Map {
         None
     }
 
-    fn get_mut(&mut self, cor: Cor) -> &mut Field {
-        self.map.get_mut(cor.row as usize).as_mut().unwrap().get_mut(cor.col as usize).as_mut().unwrap().as_mut().unwrap()
+    fn set_shape(&mut self, cor: Cor, shape: Shape) {
+        self.map.get_mut(cor.row as usize).as_mut().unwrap().get_mut(cor.col as usize).as_mut().unwrap().as_mut().unwrap().shape = Some(shape);
+    }
+    fn set_distance(&mut self, cor: Cor, distance: u8) {
+        self.map.get_mut(cor.row as usize).as_mut().unwrap().get_mut(cor.col as usize).as_mut().unwrap().as_mut().unwrap().distance = Some(distance);
     }
 
-    fn get_connected(&self, cor: Cor) -> Vec<&Field> {
-        let mut out = Vec::new();
-        if let Some(field) = self.get(cor.n()) {
-            if field.is_pointing_south() {
-                out.push(field);
-            }
-        }
-        if let Some(field) = self.get(cor.s()) {
-            if field.is_pointing_north() {
-                out.push(field);
-            }
-        }
-        if let Some(field) = self.get(cor.w()) {
-            if field.is_pointing_east() {
-                out.push(field);
-            }
-        }
-        if let Some(field) = self.get(cor.e()) {
-            if field.is_pointing_west() {
-                out.push(field);
-            }
-        }
-        out
-    }
     fn get_shape_from_neighbours(&self, cor: Cor) -> Shape {
         let mut directions = Vec::new();
         for d in [Direction::N, Direction::S, Direction::W, Direction::E] {
