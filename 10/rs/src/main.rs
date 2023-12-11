@@ -40,12 +40,12 @@ struct Map {
 }
 
 fn main() {
-    let file = File::open("../../exp_easy").expect("failed to find input file");
+    let file = File::open("../../input").expect("failed to find input file");
     let reader = BufReader::new(file);
     let map = Map::parse(reader.lines().map(|ln| ln.unwrap()));
     println!("{}", map);
     map.print_distances();
-    let (furthest_cor, furthest_field) = map.map.iter().max_by_key(|(_c, f)| f.distance.unwrap()).unwrap();
+    let (furthest_cor, furthest_field) = map.map.iter().filter(|(_c, f)| f.distance.is_some()).max_by_key(|(_c, f)| f.distance.unwrap()).unwrap();
     println!("Furthest field: {:?}, {}", furthest_cor, furthest_field.distance.unwrap());
 }
 
