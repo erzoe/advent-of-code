@@ -12,13 +12,15 @@ static RE_NODE_LINE: Lazy::<Regex> = Lazy::new(|| Regex::new(r"^(?<name>[A-Z1-9]
 
 #[proc_macro]
 pub fn definitions(_input: TokenStream) -> TokenStream {
-    let input = std::fs::read_to_string("../../exp").expect("input file does not exist");
+    // you need to replace the file name with an absolute path
+    let input = std::fs::read_to_string("../../input").expect("input file does not exist");
     let mut lines = input.lines();
     let directions = lines.next().unwrap().chars().map(|c| match c {
         'L' => quote!{Direction::Left},
         'R' => quote!{Direction::Right},
         _ => panic!("unknown direction '{c}'"),
     }).collect::<Vec<_>>();
+    let directions_len = directions.len();
 
     lines.next();
     let mut nodes = Vec::<Ident>::new();
@@ -31,26 +33,54 @@ pub fn definitions(_input: TokenStream) -> TokenStream {
         right.push(to_name(caps.name("right").unwrap().as_str().to_string()));
     }
 
+    let is_start = nodes.iter().map(|n| if n.to_string().ends_with('A') {
+        quote!(true)
+    } else {
+        quote!(false)
+    }).collect::<Vec<_>>();
+    let is_goal = nodes.iter().map(|n| if n.to_string().ends_with('Z') {
+        quote!(true)
+    } else {
+        quote!(false)
+    }).collect::<Vec<_>>();
+    let start_nodes = nodes.iter().filter(|n| n.to_string().ends_with('A')).collect::<Vec<_>>();
+    let start_nodes_len = start_nodes.len();
+
     quote!{
+        #[derive(Debug, Copy, Clone, PartialEq, Eq)]
         enum Direction {
             Left,
             Right,
         }
 
-        enum Nodes {
+        #[derive(Debug, Copy, Clone, PartialEq, Eq)]
+        enum Node {
             #(#nodes,)*
         }
 
-        impl Nodes {
+        impl Node {
             fn next(&self, direction: Direction) -> Self {
                 match (self, direction) {
-                    #( (#nodes, Direction::Left) => Self::#left, )*
-                    #( (#nodes, Direction::Right) => Self::#right, )*
+                    #( (Self::#nodes, Direction::Left) => Self::#left, )*
+                    #( (Self::#nodes, Direction::Right) => Self::#right, )*
+                }
+            }
+
+            fn is_start(&self) -> bool {
+                match (self) {
+                    #( Self::#nodes => #is_start, )*
+                }
+            }
+
+            fn is_goal(&self) -> bool {
+                match (self) {
+                    #( Self::#nodes => #is_goal, )*
                 }
             }
         }
 
-        const DIRECTIONS = [#(#directions),*];
+        const DIRECTIONS: [Direction; (#directions_len)] = [#(#directions),*];
+        const START_NODES: [Node; (#start_nodes_len)] = [#(Node::#start_nodes),*];
     }.into()
 }
 
