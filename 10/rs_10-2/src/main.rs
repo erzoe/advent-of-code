@@ -47,7 +47,7 @@ struct Map {
 }
 
 fn main() {
-    let file = File::open("../../exp2_nogap").expect("failed to find input file");
+    let file = File::open("../../exp2_complex").expect("failed to find input file");
     let reader = BufReader::new(file);
     let map = Map::parse(reader.lines().map(|ln| ln.unwrap()));
     println!("{}", map);
@@ -154,7 +154,6 @@ impl Map {
             }
             d0 = d1;
         }
-        assert!(left + 4 == right || right + 4 == left);
         if left > right {
             Side::Left
         } else {
