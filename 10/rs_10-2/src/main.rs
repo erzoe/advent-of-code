@@ -22,6 +22,12 @@ enum Direction{
     E
 }
 
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+enum Side{
+    Left,
+    Right,
+}
+
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Hash)]
 struct Cor {
     row: i16,
@@ -31,6 +37,7 @@ struct Cor {
 struct Field {
     shape: Shape,
     distance: Option<u32>,
+    is_inside: bool,
 }
 
 struct Map {
@@ -40,13 +47,15 @@ struct Map {
 }
 
 fn main() {
-    let file = File::open("../../input").expect("failed to find input file");
+    let file = File::open("../../exp2_nogap").expect("failed to find input file");
     let reader = BufReader::new(file);
     let map = Map::parse(reader.lines().map(|ln| ln.unwrap()));
     println!("{}", map);
     map.print_distances();
     let (furthest_cor, furthest_field) = map.map.iter().filter(|(_c, f)| f.distance.is_some()).max_by_key(|(_c, f)| f.distance.unwrap()).unwrap();
+    let fields_inside = map.map.iter().filter(|(_c, f)| f.is_inside).count();
     println!("Furthest field: {:?}, {}", furthest_cor, furthest_field.distance.unwrap());
+    println!("Number fields inside: {}", fields_inside);
 }
 
 impl Map {
@@ -70,6 +79,7 @@ impl Map {
 
         map.insert(start, Field::new(Self::get_shape_from_neighbours(&map, start)));
         Self::count_distances(&mut map, start);
+        Self::set_inside(&mut map, start);
 
         Self { map, rows: cor.row.try_into().unwrap(), cols: cor.col.try_into().unwrap() }
     }
@@ -94,6 +104,100 @@ impl Map {
             map.entry(c2).and_modify(|f| f.distance = Some(distance));
         }
     }
+
+    fn set_inside(map: &mut HashMap<Cor, Field>, start: Cor) {
+        let mut coming_from = map[&start].shape.to_directions().0;
+        let inside = Self::get_inside_side(map, start, coming_from);
+        let mut cor_pipe = start;
+        loop {
+            (cor_pipe, coming_from) = Self::get_next(map, cor_pipe, coming_from);
+            if cor_pipe == start {
+                break;
+            }
+
+            let d = Self::get_direction(coming_from, inside);
+            let mut cor_inner = cor_pipe;
+            loop {
+                cor_inner = cor_inner.step(d);
+                if let Some(field) = map.get_mut(&cor_inner) {
+                    if field.distance.is_some() {
+                        // I have hit the other side of the pipe, that's the end of the inside
+                        break;
+                    } else {
+                        field.is_inside = true;
+                    }
+                } else {
+                    map.insert(cor_inner, Field {
+                        is_inside: true,
+                        shape: Shape::NS,  // shape is irrelevant if is_inside is set
+                        distance: None,
+                    });
+                }
+            }
+        }
+    }
+    fn get_inside_side(map: &HashMap<Cor, Field>, start: Cor, coming_from: Direction) -> Side {
+        let mut left = 0;
+        let mut right = 0;
+        let mut d0 = coming_from;
+        let mut d1: Direction;
+        let mut c = start;
+        loop {
+            (c, d1) = Self::get_next(map, c, d0);
+            if c == start {
+                break;
+            }
+            match Self::get_turn(d0, d1) {
+                Some(Side::Left) => {left += 1;}
+                Some(Side::Right) => {right += 1;}
+                None => {}
+            }
+            d0 = d1;
+        }
+        assert!(left + 4 == right || right + 4 == left);
+        if left > right {
+            Side::Left
+        } else {
+            Side::Right
+        }
+    }
+    fn get_turn(coming_from_0: Direction, coming_from_1: Direction) -> Option<Side> {
+        match (coming_from_0.opposite(), coming_from_1.opposite()) {
+            (Direction::N, Direction::W) => Some(Side::Left),
+            (Direction::W, Direction::S) => Some(Side::Left),
+            (Direction::S, Direction::E) => Some(Side::Left),
+            (Direction::E, Direction::N) => Some(Side::Left),
+
+            (Direction::N, Direction::E) => Some(Side::Right),
+            (Direction::E, Direction::S) => Some(Side::Right),
+            (Direction::S, Direction::W) => Some(Side::Right),
+            (Direction::W, Direction::N) => Some(Side::Right),
+
+            (Direction::N, Direction::N) => None,
+            (Direction::S, Direction::S) => None,
+            (Direction::W, Direction::W) => None,
+            (Direction::E, Direction::E) => None,
+
+            (Direction::N, Direction::S) => panic!("180° turn is not possible"),
+            (Direction::S, Direction::N) => panic!("180° turn is not possible"),
+            (Direction::W, Direction::E) => panic!("180° turn is not possible"),
+            (Direction::E, Direction::W) => panic!("180° turn is not possible"),
+        }
+    }
+    fn get_direction(coming_from: Direction, side: Side) -> Direction {
+        match (coming_from.opposite(), side) {
+            (Direction::N, Side::Left) => Direction::W,
+            (Direction::W, Side::Left) => Direction::S,
+            (Direction::S, Side::Left) => Direction::E,
+            (Direction::E, Side::Left) => Direction::N,
+
+            (Direction::N, Side::Right) => Direction::E,
+            (Direction::E, Side::Right) => Direction::S,
+            (Direction::S, Side::Right) => Direction::W,
+            (Direction::W, Side::Right) => Direction::N,
+        }
+    }
+
     fn get_next(map: &HashMap<Cor, Field>, cor: Cor, coming_from: Direction) -> (Cor, Direction) {
         let (d1, d2) = map[&cor].shape.to_directions();
         if d1 == coming_from {
@@ -139,7 +243,11 @@ impl fmt::Display for Map {
         for row in 0..self.rows {
             for col in 0..self.cols {
                 if let Some(field) = self.map.get(&Cor{row: row.try_into().unwrap(), col: col.try_into().unwrap()}) {
-                    write!(f, "{}", field.shape.to_symbol())?;
+                    if field.is_inside {
+                        write!(f, "I")?;
+                    } else {
+                        write!(f, "{}", field.shape.to_symbol())?;
+                    }
                 } else {
                     write!(f, " ")?;
                 }
@@ -226,7 +334,7 @@ impl Direction {
 
 impl Field {
     fn new(shape: Shape) -> Self {
-        Self { shape, distance: None }
+        Self { shape, distance: None, is_inside: false }
     }
 
     fn is_pointing_north(&self) -> bool {
