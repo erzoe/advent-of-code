@@ -15,13 +15,13 @@ struct Galaxy {
 }
 
 fn main() {
-    let mut galaxies = Galaxies::read("../../exp");
-    println!("read galaxies:");
-    println!("{}", galaxies);
+    let mut galaxies = Galaxies::read("../../input");
+    //println!("read galaxies:");
+    //println!("{}", galaxies);
 
     galaxies.expand();
-    println!("galaxies after expansion:");
-    println!("{}", galaxies);
+    //println!("galaxies after expansion:");
+    //println!("{}", galaxies);
 
     let sum_of_distances: usize = galaxies.get_distances().iter().sum();
     println!("result: {}", sum_of_distances);
@@ -81,7 +81,7 @@ impl Galaxies {
                 let g2 = &self.galaxies[j];
                 let d = g1.get_distance(g2);
                 out.push(d);
-                println!("distance between galaxy {} and {}: {d}", i+1, j+1)
+                //println!("distance between galaxy {} and {}: {d}", i+1, j+1)
             }
         }
         out
