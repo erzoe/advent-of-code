@@ -56,7 +56,7 @@ impl Galaxies {
         for row in empty_rows.iter().rev() {
             for galaxy in &mut self.galaxies {
                 if galaxy.row > *row {
-                    galaxy.row += 1;
+                    galaxy.row += 1000000;
                 }
             }
         }
@@ -64,7 +64,7 @@ impl Galaxies {
         for col in empty_cols.iter().rev() {
             for galaxy in &mut self.galaxies {
                 if galaxy.col > *col {
-                    galaxy.col += 1;
+                    galaxy.col += 1000000;
                 }
             }
         }
