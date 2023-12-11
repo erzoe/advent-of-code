@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate macros;
+
 use std::fs::File;
 use std::io::BufReader;
 use std::io::BufRead;
