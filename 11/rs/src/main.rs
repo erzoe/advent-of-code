@@ -53,7 +53,7 @@ impl Galaxies {
         let empty_rows = (0..self.rows).filter(|row| self.galaxies.iter().all(|g| g.row != *row)).collect::<Vec<usize>>();
         let empty_cols = (0..self.cols).filter(|col| self.galaxies.iter().all(|g| g.col != *col)).collect::<Vec<usize>>();
 
-        for row in &empty_rows {
+        for row in empty_rows.iter().rev() {
             for galaxy in &mut self.galaxies {
                 if galaxy.row > *row {
                     galaxy.row += 1;
@@ -61,7 +61,7 @@ impl Galaxies {
             }
         }
 
-        for col in &empty_cols {
+        for col in empty_cols.iter().rev() {
             for galaxy in &mut self.galaxies {
                 if galaxy.col > *col {
                     galaxy.col += 1;
