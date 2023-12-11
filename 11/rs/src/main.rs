@@ -81,7 +81,7 @@ impl Galaxies {
                 let g2 = &self.galaxies[j];
                 let d = g1.get_distance(g2);
                 out.push(d);
-                println!("distance between galaxy {i} and {j}: {d}")
+                println!("distance between galaxy {} and {}: {d}", i+1, j+1)
             }
         }
         out
@@ -102,7 +102,7 @@ impl fmt::Display for Galaxies {
         for row in 0..self.rows {
             for col in 0..self.cols {
                 if let Some(galaxy) = self.get(row, col) {
-                    write!(f, "{}", galaxy)?;
+                    write!(f, "{}", galaxy+1)?;
                 } else {
                     write!(f, ".")?;
                 }
