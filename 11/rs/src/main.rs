@@ -1,6 +1,7 @@
 use std::fs::File;
 use std::io::BufReader;
 use std::io::BufRead;
+use std::fmt;
 
 struct Galaxies {
     galaxies: Vec<Galaxy>,
@@ -15,7 +16,13 @@ struct Galaxy {
 
 fn main() {
     let mut galaxies = Galaxies::read("../../exp");
+    println!("read galaxies:");
+    println!("{}", galaxies);
+
     galaxies.expand();
+    println!("galaxies after expansion:");
+    println!("{}", galaxies);
+
     let sum_of_distances: usize = galaxies.get_distances().iter().sum();
     println!("result: {}", sum_of_distances);
 }
@@ -77,6 +84,31 @@ impl Galaxies {
             }
         }
         out
+    }
+
+    fn get(&self, row: usize, col: usize) -> Option<usize> {
+        for (i, galaxy) in self.galaxies.iter().enumerate() {
+            if galaxy.row == row && galaxy.col == col {
+                return Some(i);
+            }
+        }
+        None
+    }
+}
+
+impl fmt::Display for Galaxies {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        for row in 0..self.rows {
+            for col in 0..self.cols {
+                if let Some(galaxy) = self.get(row, col) {
+                    write!(f, "{}", galaxy)?;
+                } else {
+                    write!(f, ".")?;
+                }
+            }
+            writeln!(f)?;
+        }
+        Ok(())
     }
 }
 
