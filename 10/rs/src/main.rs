@@ -69,6 +69,7 @@ impl Map {
         let mut out = Self { map, rows, cols };
         let start_cor = out.map.iter().flat_map(|row| row.iter()).filter(|f| f.is_some()).map(|f| f.as_ref().unwrap()).find(|f| f.distance == Some(0)).expect("failed to find start field").cor;
         out.set_shape(start_cor, out.get_shape_from_neighbours(start_cor));
+        out.count_distances(start_cor);
 
         out
     }
@@ -90,6 +91,35 @@ impl Map {
     }
     fn set_distance(&mut self, cor: Cor, distance: u8) {
         self.map.get_mut(cor.row as usize).as_mut().unwrap().get_mut(cor.col as usize).as_mut().unwrap().as_mut().unwrap().distance = Some(distance);
+    }
+    fn count_distances(&mut self, start_cor: Cor) {
+        let start = self.get(start_cor).unwrap();
+        let mut distance = 0;
+        let mut f1 = start;
+        let mut f2 = start;
+        let (mut d1, mut d2) = start.shape.unwrap().to_directions();
+        loop {
+            (f1, d1) = self.get_next(f1, d1);
+            (f2, d2) = self.get_next(f2, d2);
+            distance += 1;
+            if f1.distance.is_some() {
+                break;
+            }
+            self.set_distance(f1.cor, distance);
+            if f2.distance.is_some() {
+                break;
+            }
+            self.set_distance(f2.cor, distance);
+        }
+    }
+    fn get_next(&self, field: &Field, coming_from: Direction) -> (&Field, Direction) {
+        let (d1, d2) = field.shape.unwrap().to_directions();
+        if d1 == coming_from {
+            // I am using unwrap_or_else with panic instead of expect because expect cannot format str
+            (self.get(field.cor.step(d2)).unwrap_or_else(|| panic!("{:?} connects to empty field", field.cor)), d2)
+        } else {
+            (self.get(field.cor.step(d1)).unwrap_or_else(|| panic!("{:?} connects to empty field", field.cor)), d1)
+        }
     }
 
     fn get_shape_from_neighbours(&self, cor: Cor) -> Shape {
@@ -173,6 +203,17 @@ impl Shape {
             (Direction::S, Direction::S) => panic!("two different directions must be given"),
             (Direction::W, Direction::W) => panic!("two different directions must be given"),
             (Direction::E, Direction::E) => panic!("two different directions must be given"),
+        }
+    }
+
+    fn to_directions(&self) -> (Direction, Direction) {
+        match self {
+            Self::NS => (Direction::N, Direction::S),
+            Self::NW => (Direction::N, Direction::W),
+            Self::NE => (Direction::N, Direction::E),
+            Self::WE => (Direction::W, Direction::E),
+            Self::SW => (Direction::S, Direction::W),
+            Self::SE => (Direction::S, Direction::E),
         }
     }
 }
