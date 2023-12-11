@@ -1,6 +1,7 @@
 use std::fs::File;
 use std::io::BufReader;
 use std::io::BufRead;
+use std::collections::HashMap;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 enum Shape {
@@ -20,112 +21,88 @@ enum Direction{
     E
 }
 
-struct Field {
-    shape: Option<Shape>,
-    distance: Option<u8>,
-    cor: Cor,
-}
-
-struct FieldParser {
-    cor: Cor,
-}
-
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Hash)]
 struct Cor {
     row: i16,
     col: i16,
 }
 
+struct Field {
+    shape: Shape,
+    distance: Option<u32>,
+}
+
 struct Map {
-    map: Vec<Vec<Option<Field>>>,
+    map: HashMap<Cor, Field>,
     rows: usize,
     cols: usize,
 }
 
 fn main() {
-    let file = File::open("../../exp").expect("failed to find input file");
+    let file = File::open("../../exp_easy").expect("failed to find input file");
     let reader = BufReader::new(file);
     let map = Map::parse(reader.lines().map(|ln| ln.unwrap()));
-    let furthest_field = map.map.iter().flat_map(|row| row.iter()).filter(|f| f.is_some()).map(|f| f.as_ref().unwrap()).max_by_key(|f| f.distance.unwrap_or(0)).unwrap();
-    println!("Furthest field: {:?}, {}", furthest_field.cor, furthest_field.distance.unwrap());
+    let (furthest_cor, furthest_field) = map.map.iter().max_by_key(|(_c, f)| f.distance.unwrap()).unwrap();
+    println!("Furthest field: {:?}, {}", furthest_cor, furthest_field.distance.unwrap());
 }
 
 impl Map {
-    fn parse<'a>(lines: impl Iterator<Item=String>) -> Self {
-        let mut map: Vec<Vec<Option<Field>>> = Vec::new();
-        let mut field_parser = FieldParser::new();
+    fn parse(lines: impl Iterator<Item=String>) -> Self {
+        let mut map = HashMap::<Cor, Field>::new();
+        let mut cor = Cor::origin();
+        let mut start = None;
         for ln in lines {
-            map.push( ln.chars().map(|symbol| field_parser.parse(symbol)).collect() );
-        }
-
-        let rows = map.len();
-        let cols = map[0].len();
-        for i in 1..rows {
-            if map[i].len() != cols {
-                panic!("row {i} has a different length: {} instead of {cols}", map[i].len());
+            cor.col = 0;
+            for s in ln.chars() {
+                match s {
+                    'S' => { start = Some(cor); }
+                    '.' => {}
+                    _ => { map.insert(cor, Field::new(Shape::parse(s))); }
+                }
+                cor.col += 1;
             }
+            cor.row += 1;
         }
+        let start = start.expect("input did not contain a start field");
 
-        let mut out = Self { map, rows, cols };
-        let start_cor = out.map.iter().flat_map(|row| row.iter()).filter(|f| f.is_some()).map(|f| f.as_ref().unwrap()).find(|f| f.distance == Some(0)).expect("failed to find start field").cor;
-        out.set_shape(start_cor, out.get_shape_from_neighbours(start_cor));
-        out.count_distances(start_cor);
+        map.insert(start, Field::new(Self::get_shape_from_neighbours(&map, start)));
+        Self::count_distances(&mut map, start);
 
-        out
+        Self { map, rows: cor.row.try_into().unwrap(), cols: cor.col.try_into().unwrap() }
     }
 
-    fn get(&self, cor: Cor) -> Option<&Field> {
-        if cor.row < 0 || cor.col < 0 {
-            return None;
-        }
-        if let Some(row) = self.map.get(cor.row as usize) {
-            if let Some(field) = row.get(cor.col as usize) {
-                return field.as_ref();
-            }
-        }
-        None
-    }
-
-    fn set_shape(&mut self, cor: Cor, shape: Shape) {
-        self.map.get_mut(cor.row as usize).as_mut().unwrap().get_mut(cor.col as usize).as_mut().unwrap().as_mut().unwrap().shape = Some(shape);
-    }
-    fn set_distance(&mut self, cor: Cor, distance: u8) {
-        self.map.get_mut(cor.row as usize).as_mut().unwrap().get_mut(cor.col as usize).as_mut().unwrap().as_mut().unwrap().distance = Some(distance);
-    }
-    fn count_distances(&mut self, start_cor: Cor) {
-        let start = self.get(start_cor).unwrap();
+    fn count_distances(map: &mut HashMap<Cor, Field>, start: Cor) {
         let mut distance = 0;
-        let mut f1 = start;
-        let mut f2 = start;
-        let (mut d1, mut d2) = start.shape.unwrap().to_directions();
+        let mut c1 = start;
+        let mut c2 = start;
+        let (mut d1, mut d2) = map[&start].shape.to_directions();
         loop {
-            (f1, d1) = self.get_next(f1, d1);
-            (f2, d2) = self.get_next(f2, d2);
+            (c1, d1) = Self::get_next(map, c1, d1);
+            (c2, d2) = Self::get_next(map, c2, d2);
             distance += 1;
-            if f1.distance.is_some() {
+            if map[&c1].distance.is_some() {
                 break;
             }
-            self.set_distance(f1.cor, distance);
-            if f2.distance.is_some() {
+            map.entry(c1).and_modify(|f| f.distance = Some(distance));
+            if map[&c2].distance.is_some() {
                 break;
             }
-            self.set_distance(f2.cor, distance);
+            map.entry(c2).and_modify(|f| f.distance = Some(distance));
         }
     }
-    fn get_next(&self, field: &Field, coming_from: Direction) -> (&Field, Direction) {
-        let (d1, d2) = field.shape.unwrap().to_directions();
+    fn get_next(map: &HashMap<Cor, Field>, cor: Cor, coming_from: Direction) -> (Cor, Direction) {
+        let (d1, d2) = map[&cor].shape.to_directions();
         if d1 == coming_from {
-            // I am using unwrap_or_else with panic instead of expect because expect cannot format str
-            (self.get(field.cor.step(d2)).unwrap_or_else(|| panic!("{:?} connects to empty field", field.cor)), d2)
+            (cor.step(d2), d2)
         } else {
-            (self.get(field.cor.step(d1)).unwrap_or_else(|| panic!("{:?} connects to empty field", field.cor)), d1)
+            (cor.step(d1), d1)
         }
     }
 
-    fn get_shape_from_neighbours(&self, cor: Cor) -> Shape {
+    fn get_shape_from_neighbours(map: &HashMap<Cor, Field>, cor: Cor) -> Shape {
         let mut directions = Vec::new();
         for d in [Direction::N, Direction::S, Direction::W, Direction::E] {
-            if let Some(field) = self.get(cor.step(d)) {
+            if let Some(field) = map.get(&cor.step(d)) {
                 if field.is_pointing(d.opposite()) {
                     directions.push(d);
                 }
@@ -133,36 +110,6 @@ impl Map {
         }
         assert_eq!(directions.len(), 2, "start field does not have exactly two connecting neighbours");
         Shape::from_directions(directions[0], directions[1])
-
-        //if directions.contains(Direction::N) && directions.contains(Direction::S) { Shape::NS }
-        //else if directions.contains(Direction::N) && directions.contains(Direction::W) { Shape::NW }
-        //else if directions.contains(Direction::N) && directions.contains(Direction::E) { Shape::NE }
-        //else if directions.contains(Direction::N) && directions.contains(Direction::S) { Shape::NS }
-
-    }
-}
-
-impl FieldParser {
-    fn new() -> Self {
-        Self { cor: Cor{row: 0, col: 0} }
-    }
-
-    fn next_row(&mut self) {
-        self.cor.row += 1;
-        self.cor.col = 0;
-    }
-
-    fn parse(&mut self, symbol: char) -> Option<Field> {
-        if symbol == '.' {
-            return None;
-        }
-        let out = Field{
-            shape: if symbol == 'S' {None} else {Some(Shape::parse(symbol))},
-            distance: None,
-            cor: self.cor,
-        };
-        self.cor.col += 1;
-        Some(out)
     }
 }
 
@@ -206,7 +153,7 @@ impl Shape {
         }
     }
 
-    fn to_directions(&self) -> (Direction, Direction) {
+    fn to_directions(self) -> (Direction, Direction) {
         match self {
             Self::NS => (Direction::N, Direction::S),
             Self::NW => (Direction::N, Direction::W),
@@ -230,33 +177,25 @@ impl Direction {
 }
 
 impl Field {
+    fn new(shape: Shape) -> Self {
+        Self { shape, distance: None }
+    }
+
     fn is_pointing_north(&self) -> bool {
-        if let Some(s) = self.shape {
-            s == Shape::NS || s == Shape::NW || s == Shape::NE
-        } else {
-            false
-        }
+        let s =self.shape;
+        s == Shape::NS || s == Shape::NW || s == Shape::NE
     }
     fn is_pointing_south(&self) -> bool {
-        if let Some(s) = self.shape {
-            s == Shape::NS || s == Shape::SW || s == Shape::SE
-        } else {
-            false
-        }
+        let s =self.shape;
+        s == Shape::NS || s == Shape::SW || s == Shape::SE
     }
     fn is_pointing_west(&self) -> bool {
-        if let Some(s) = self.shape {
-            s == Shape::WE || s == Shape::SW || s == Shape::NW
-        } else {
-            false
-        }
+        let s =self.shape;
+        s == Shape::WE || s == Shape::SW || s == Shape::NW
     }
     fn is_pointing_east(&self) -> bool {
-        if let Some(s) = self.shape {
-            s == Shape::WE || s == Shape::SE || s == Shape::SE
-        } else {
-            false
-        }
+        let s =self.shape;
+        s == Shape::WE || s == Shape::SE || s == Shape::NE
     }
     fn is_pointing(&self, d: Direction) -> bool {
         match d {
@@ -269,6 +208,10 @@ impl Field {
 }
 
 impl Cor {
+    fn origin() -> Self {
+        Self { row: 0, col: 0 }
+    }
+
     fn n(&self) -> Cor { Cor{ row: self.row - 1, ..*self } }
     fn s(&self) -> Cor { Cor{ row: self.row + 1, ..*self } }
     fn w(&self) -> Cor { Cor{ col: self.col - 1, ..*self } }
@@ -282,12 +225,3 @@ impl Cor {
         }
     }
 }
-
-//impl<'a> IntoIterator for &'a Map {
-//    type Item = &'a Field;
-//    type IntoIter = impl Iterator<Item=Self::Item>;
-//
-//    fn into_iter(self) -> Self::IntoIter {
-//        self.map.iter().flat_map(|row| row.iter()).filter(|f| f.is_some()).map(|f| f.as_ref().unwrap())
-//    }
-//}
