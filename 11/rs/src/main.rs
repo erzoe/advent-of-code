@@ -52,11 +52,14 @@ impl Galaxies {
     fn expand(&mut self) {
         let empty_rows = (0..self.rows).filter(|row| self.galaxies.iter().all(|g| g.row != *row)).collect::<Vec<usize>>();
         let empty_cols = (0..self.cols).filter(|col| self.galaxies.iter().all(|g| g.col != *col)).collect::<Vec<usize>>();
+        //println!("empty rows: {:?}", empty_rows);
+        //println!("empty cols: {:?}", empty_cols);
+        let exp = 1000000 - 1;
 
         for row in empty_rows.iter().rev() {
             for galaxy in &mut self.galaxies {
                 if galaxy.row > *row {
-                    galaxy.row += 1000000;
+                    galaxy.row += exp;
                 }
             }
         }
@@ -64,13 +67,13 @@ impl Galaxies {
         for col in empty_cols.iter().rev() {
             for galaxy in &mut self.galaxies {
                 if galaxy.col > *col {
-                    galaxy.col += 1000000;
+                    galaxy.col += exp;
                 }
             }
         }
 
-        self.rows += empty_rows.len();
-        self.cols += empty_cols.len();
+        self.rows += empty_rows.len() * exp;
+        self.cols += empty_cols.len() * exp;
     }
 
     fn get_distances(&self) -> Vec<usize> {
