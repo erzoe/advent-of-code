@@ -47,7 +47,7 @@ struct Map {
 }
 
 fn main() {
-    let file = File::open("../../exp2_complex").expect("failed to find input file");
+    let file = File::open("../../input").expect("failed to find input file");
     let reader = BufReader::new(file);
     let map = Map::parse(reader.lines().map(|ln| ln.unwrap()));
     println!("{}", map);
