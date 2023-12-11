@@ -44,6 +44,7 @@ fn main() {
     let reader = BufReader::new(file);
     let map = Map::parse(reader.lines().map(|ln| ln.unwrap()));
     println!("{}", map);
+    map.print_distances();
     let (furthest_cor, furthest_field) = map.map.iter().max_by_key(|(_c, f)| f.distance.unwrap()).unwrap();
     println!("Furthest field: {:?}, {}", furthest_cor, furthest_field.distance.unwrap());
 }
@@ -112,6 +113,23 @@ impl Map {
         }
         assert_eq!(directions.len(), 2, "start field does not have exactly two connecting neighbours");
         Shape::from_directions(directions[0], directions[1])
+    }
+
+    fn print_distances(&self) {
+        for row in 0..self.rows {
+            for col in 0..self.cols {
+                if let Some(field) = self.map.get(&Cor{row: row.try_into().unwrap(), col: col.try_into().unwrap()}) {
+                    if let Some(distance) = field.distance {
+                        print!("{}", distance);
+                    } else {
+                        print!("?", );
+                    }
+                } else {
+                    print!(" ");
+                }
+            }
+            println!();
+        }
     }
 }
 
