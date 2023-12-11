@@ -115,23 +115,33 @@ impl Map {
                 break;
             }
 
-            let d = Self::get_direction(coming_from, inside);
-            let mut cor_inner = cor_pipe;
-            loop {
-                cor_inner = cor_inner.step(d);
-                if let Some(field) = map.get_mut(&cor_inner) {
-                    if field.distance.is_some() {
-                        // I have hit the other side of the pipe, that's the end of the inside
-                        break;
+            let going_to = map[&cor_pipe].shape.to_other_direction(coming_from);
+            let mut directions_pointing_inwards = Vec::new();
+            let turn = Self::get_turn(coming_from, going_to.opposite());
+            if turn.is_none() {
+                directions_pointing_inwards.push(coming_from.opposite().turn(inside))
+            } else if turn.unwrap() == inside.opposite() {
+                directions_pointing_inwards.push(coming_from.opposite());
+                directions_pointing_inwards.push(coming_from.opposite().turn(inside));
+            };
+            for d in directions_pointing_inwards {
+                let mut cor_inner = cor_pipe;
+                loop {
+                    cor_inner = cor_inner.step(d);
+                    if let Some(field) = map.get_mut(&cor_inner) {
+                        if field.distance.is_some() {
+                            // I have hit the other side of the pipe, that's the end of the inside
+                            break;
+                        } else {
+                            field.is_inside = true;
+                        }
                     } else {
-                        field.is_inside = true;
+                        map.insert(cor_inner, Field {
+                            is_inside: true,
+                            shape: Shape::NS,  // shape is irrelevant if is_inside is set
+                            distance: None,
+                        });
                     }
-                } else {
-                    map.insert(cor_inner, Field {
-                        is_inside: true,
-                        shape: Shape::NS,  // shape is irrelevant if is_inside is set
-                        distance: None,
-                    });
                 }
             }
         }
@@ -181,19 +191,6 @@ impl Map {
             (Direction::S, Direction::N) => panic!("180° turn is not possible"),
             (Direction::W, Direction::E) => panic!("180° turn is not possible"),
             (Direction::E, Direction::W) => panic!("180° turn is not possible"),
-        }
-    }
-    fn get_direction(coming_from: Direction, side: Side) -> Direction {
-        match (coming_from.opposite(), side) {
-            (Direction::N, Side::Left) => Direction::W,
-            (Direction::W, Side::Left) => Direction::S,
-            (Direction::S, Side::Left) => Direction::E,
-            (Direction::E, Side::Left) => Direction::N,
-
-            (Direction::N, Side::Right) => Direction::E,
-            (Direction::E, Side::Right) => Direction::S,
-            (Direction::S, Side::Right) => Direction::W,
-            (Direction::W, Side::Right) => Direction::N,
         }
     }
 
@@ -318,6 +315,41 @@ impl Shape {
             Self::SE => (Direction::S, Direction::E),
         }
     }
+
+    fn to_other_direction(self, d: Direction) -> Direction {
+        match (self, d) {
+            (Self::NS, Direction::N) => Direction::S,
+            (Self::NS, Direction::S) => Direction::N,
+
+            (Self::NW, Direction::N) => Direction::W,
+            (Self::NW, Direction::W) => Direction::N,
+
+            (Self::NE, Direction::N) => Direction::E,
+            (Self::NE, Direction::E) => Direction::N,
+
+            (Self::WE, Direction::W) => Direction::E,
+            (Self::WE, Direction::E) => Direction::W,
+
+            (Self::SW, Direction::S) => Direction::W,
+            (Self::SW, Direction::W) => Direction::S,
+
+            (Self::SE, Direction::S) => Direction::E,
+            (Self::SE, Direction::E) => Direction::S,
+
+            (Self::NS, Direction::W) => panic!("{d:?} is not one of {self:?} directions"),
+            (Self::NS, Direction::E) => panic!("{d:?} is not one of {self:?} directions"),
+            (Self::WE, Direction::N) => panic!("{d:?} is not one of {self:?} directions"),
+            (Self::WE, Direction::S) => panic!("{d:?} is not one of {self:?} directions"),
+            (Self::NW, Direction::S) => panic!("{d:?} is not one of {self:?} directions"),
+            (Self::NW, Direction::E) => panic!("{d:?} is not one of {self:?} directions"),
+            (Self::SW, Direction::N) => panic!("{d:?} is not one of {self:?} directions"),
+            (Self::SW, Direction::E) => panic!("{d:?} is not one of {self:?} directions"),
+            (Self::SE, Direction::N) => panic!("{d:?} is not one of {self:?} directions"),
+            (Self::SE, Direction::W) => panic!("{d:?} is not one of {self:?} directions"),
+            (Self::NE, Direction::W) => panic!("{d:?} is not one of {self:?} directions"),
+            (Self::NE, Direction::S) => panic!("{d:?} is not one of {self:?} directions"),
+        }
+    }
 }
 
 impl Direction {
@@ -327,6 +359,31 @@ impl Direction {
             Self::S => Self::N,
             Self::W => Self::E,
             Self::E => Self::W,
+        }
+    }
+
+    fn turn(&self, side: Side) -> Self {
+        match (self, side) {
+            (Self::N, Side::Left) => Self::W,
+            (Self::N, Side::Right) => Self::E,
+
+            (Self::W, Side::Left) => Self::S,
+            (Self::W, Side::Right) => Self::N,
+
+            (Self::S, Side::Left) => Self::E,
+            (Self::S, Side::Right) => Self::W,
+
+            (Self::E, Side::Left) => Self::N,
+            (Self::E, Side::Right) => Self::S,
+        }
+    }
+}
+
+impl Side {
+    fn opposite(&self) -> Self {
+        match self {
+            Self::Left => Self::Right,
+            Self::Right => Self::Left,
         }
     }
 }
