@@ -2,7 +2,7 @@ use regex::Regex;
 
 fn main() {
     let mut result = 0;
-    for ln in std::fs::read_to_string("../../exp").expect("missing input file").lines() {
+    for ln in std::fs::read_to_string("../../input").expect("missing input file").lines() {
         let (broken, checksum) = ln.split_once(' ').expect("missing checksum in input line");
         let re = Regex::new(&(r"^\.*".to_string() + &checksum.split(',').map(|n| "#".repeat(n.parse().expect("failed to parse number"))).collect::<Vec<_>>().join(r"\.+") + r"\.*$")).expect("failed to build regex");
         let mut possibilites = 0;
@@ -12,7 +12,7 @@ fn main() {
                 possibilites += 1;
             }
         }
-        println!("{broken} {checksum}: {possibilites}");
+        //println!("{broken} {checksum}: {possibilites}");
         result += possibilites;
     }
     println!("result: {result}");
