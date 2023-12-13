@@ -22,20 +22,25 @@ struct Cor {
 
 
 fn main() {
-    let map = Map::parse(
-        std::fs::read_to_string("../../exp_row")
-            .expect("input file not found")
-            .lines(),
-    );
+    let mut maps = Vec::new();
+    for par in std::fs::read_to_string("../../input").expect("input file not found").split("\n\n") {
+        maps.push(Map::parse(par.lines()));
+    }
 
-    let mirror_rows = map.get_mirrors(Orientation::Row);
-    println!("mirror_rows: {mirror_rows:?}");
+    let mut sum_mirror_rows: usize = 0;
+    let mut sum_mirror_cols: usize = 0;
 
-    let mirror_cols = map.get_mirrors(Orientation::Col);
-    println!("mirror_cols: {mirror_cols:?}");
+    for map in maps {
+        let mirror_rows = map.get_mirrors(Orientation::Row);
+        println!("mirror_rows: {mirror_rows:?}");
 
-    let sum_mirror_rows: usize = mirror_rows.iter().sum();
-    let sum_mirror_cols: usize = mirror_cols.iter().sum();
+        let mirror_cols = map.get_mirrors(Orientation::Col);
+        println!("mirror_cols: {mirror_cols:?}");
+
+        sum_mirror_rows += mirror_rows.iter().sum::<usize>();
+        sum_mirror_cols += mirror_cols.iter().sum::<usize>();
+    }
+
     let result = sum_mirror_rows * 100 + sum_mirror_cols;
     println!("result: {}", result);
 }
