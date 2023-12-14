@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::fmt;
 
 type CorType = u8;
-type ResultType = u16;
+type ResultType = u32;
 
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
@@ -25,15 +25,15 @@ struct Platform {
 
 
 fn main() {
-    let mut platform = Platform::read("../../exp");
-    println!("read in:");
-    println!("{}", platform);
-    println!();
+    let mut platform = Platform::read("../../input");
+    //println!("read in:");
+    //println!("{}", platform);
+    //println!();
 
     platform.tilt_north();
-    println!("tilted north:");
-    println!("{}", platform);
-    println!();
+    //println!("tilted north:");
+    //println!("{}", platform);
+    //println!();
 
     println!("result: {}", platform.calc_weight_north());
 }
