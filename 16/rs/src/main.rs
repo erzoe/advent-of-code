@@ -13,7 +13,7 @@ enum Object {
 
 struct Tile {
     object: Object,
-    is_energized: bool,
+    beam_directions: Vec<Direction>,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -70,13 +70,10 @@ impl Grid {
     }
 
     fn energize(&mut self, beam: Beam) {
-        self.get_mut(beam.cor).is_energized = true;
+        self.energize_tile(&beam);
         let mut beams = vec![beam];
         while !beams.is_empty() {
             beams = beams.iter().flat_map(|b| self.move_beam(b)).collect();
-            for beam in &beams {
-                self.get_mut(beam.cor).is_energized = true;
-            }
         }
 
     }
@@ -89,11 +86,11 @@ impl Grid {
         &mut self.tiles[cor.row as usize][cor.col as usize]
     }
 
-    fn move_beam(&self, beam: &Beam) -> Vec<Beam> {
+    fn move_beam(&mut self, beam: &Beam) -> Vec<Beam> {
         let tile = self.get(beam.cor);
         let cor = beam.cor;
         let direction = beam.direction;
-        match (tile.object, beam.direction) {
+        let out: Vec<Beam> = match (tile.object, beam.direction) {
             // empty and ignored splitters
             (Object::Empty, direction) => self.next_cor(cor, direction).map(|cor| Beam{cor, direction}).into_iter().collect(),
             (Object::SplitterVer, Direction::N|Direction::S) => self.next_cor(cor, direction).map(|cor| Beam{cor, direction}).into_iter().collect(),
@@ -116,6 +113,17 @@ impl Grid {
                                                                 self.next_cor(cor, Direction::N).map(|cor| Beam{cor, direction: Direction::N}).into_iter()).collect(),
             (Object::SplitterHor, Direction::N|Direction::S) => self.next_cor(cor, Direction::E).map(|cor| Beam{cor, direction: Direction::E}).into_iter().chain(
                                                                 self.next_cor(cor, Direction::W).map(|cor| Beam{cor, direction: Direction::W}).into_iter()).collect(),
+        };
+        out.into_iter().filter(|b| self.energize_tile(b)).collect()
+    }
+
+    fn energize_tile(&mut self, beam: &Beam) -> bool {
+        let tile = self.get_mut(beam.cor);
+        if !tile.beam_directions.contains(&beam.direction) {
+            tile.beam_directions.push(beam.direction);
+            true
+        } else {
+            false
         }
     }
 
@@ -147,7 +155,7 @@ impl Grid {
     fn print_energized(&self) {
         for row in &self.tiles {
             for tile in row {
-                if tile.is_energized {
+                if tile.is_energized() {
                     print!("#");
                 } else {
                     print!(".");
@@ -183,8 +191,12 @@ impl Tile {
 
         Self {
             object,
-            is_energized: false,
+            beam_directions: Vec::new(),
         }
+    }
+
+    fn is_energized(&self) -> bool {
+        !self.beam_directions.is_empty()
     }
 }
 
