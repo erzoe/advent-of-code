@@ -11,6 +11,7 @@ enum Object {
     SplitterHor,
 }
 
+#[derive(Clone)]
 struct Tile {
     object: Object,
     beam_directions: Vec<Direction>,
@@ -27,6 +28,7 @@ struct Cor {
     col: CorType,
 }
 
+#[derive(Clone)]
 struct Grid {
     tiles: Vec<Vec<Tile>>,
     rows: CorType,
@@ -41,16 +43,29 @@ struct Beam {
 
 
 fn main() {
-    let mut grid = Grid::read(std::path::Path::new("../../input"));
+    let mut grid = Grid::read(std::path::Path::new("../../exp"));
     //println!("{}", grid);
 
-    grid.energize(Beam::start());
-    //grid.print_beams();
-    //println!();
-    //grid.print_energized();
-
-    //println!();
-    println!("number energized fields: {}", grid.count_energized());
+    let mut result: u32 = 0;
+    for row in 0..grid.rows {
+        for (col, direction) in [(0, Direction::W), (grid.cols-1, Direction::E)] {
+            let n = grid.clone().energize(Beam::new(row, col, direction)).count_energized();
+            if n > result {
+                result = n;
+                println!("found new max: {}", n)
+            }
+        }
+    }
+    for col in 0..grid.cols {
+        for (row, direction) in [(0, Direction::S), (grid.rows-1, Direction::N)] {
+            let n = grid.clone().energize(Beam::new(row, col, direction)).count_energized();
+            if n > result {
+                result = n;
+                println!("found new max: {}", n)
+            }
+        }
+    }
+    println!("result: {}", result);
 }
 
 
@@ -74,13 +89,14 @@ impl Grid {
         Self { tiles, rows, cols }
     }
 
-    fn energize(&mut self, beam: Beam) {
+    fn energize(&mut self, beam: Beam) -> &Self {
         self.energize_tile(&beam);
         let mut beams = vec![beam];
         while !beams.is_empty() {
             beams = beams.iter().flat_map(|b| self.move_beam(b)).collect();
         }
 
+        self
     }
 
     fn get(&self, cor: Cor) -> &Tile {
@@ -268,10 +284,13 @@ impl Object {
 }
 
 impl Beam {
-    fn start() -> Self {
+    fn new<T>(row: T, col: T, direction: Direction) -> Self where T: Into<CorType> {
         Self {
-            cor: Cor::origin(),
-            direction: Direction::E,
+            direction,
+            cor: Cor {
+                row: row.try_into().unwrap(),
+                col: col.try_into().unwrap(),
+            },
         }
     }
 }
