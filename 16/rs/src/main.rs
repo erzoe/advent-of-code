@@ -108,7 +108,7 @@ impl Grid {
             (Object::MirrorNwSe, Direction::E) => self.next_cor(cor, Direction::S).map(|cor| Beam{cor, direction: Direction::S}).into_iter().collect(),
             (Object::MirrorNwSe, Direction::S) => self.next_cor(cor, Direction::E).map(|cor| Beam{cor, direction: Direction::E}).into_iter().collect(),
             (Object::MirrorNwSe, Direction::N) => self.next_cor(cor, Direction::W).map(|cor| Beam{cor, direction: Direction::W}).into_iter().collect(),
-            (Object::MirrorNwSe, Direction::W) => self.next_cor(cor, Direction::S).map(|cor| Beam{cor, direction: Direction::N}).into_iter().collect(),
+            (Object::MirrorNwSe, Direction::W) => self.next_cor(cor, Direction::N).map(|cor| Beam{cor, direction: Direction::N}).into_iter().collect(),
 
             // splitter
             (Object::SplitterVer, Direction::E|Direction::W) => self.next_cor(cor, Direction::S).map(|cor| Beam{cor, direction: Direction::S}).into_iter().chain(
