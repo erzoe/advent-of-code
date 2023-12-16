@@ -1,6 +1,6 @@
 fn main() {
     let mut result: u32 = 0;
-    for cmd in std::fs::read_to_string("../../exp").expect("input file not found").trim_end().split(',') {
+    for cmd in std::fs::read_to_string("../../input").expect("input file not found").trim_end().split(',') {
         let hash_value = hash(cmd);
         result += hash_value as u32;
         println!("'{cmd}': {hash_value}");
