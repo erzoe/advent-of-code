@@ -43,7 +43,7 @@ struct Beam {
 
 
 fn main() {
-    let mut grid = Grid::read(std::path::Path::new("../../exp"));
+    let mut grid = Grid::read(std::path::Path::new("../../input"));
     //println!("{}", grid);
 
     let mut result: u32 = 0;
