@@ -41,15 +41,15 @@ struct Beam {
 
 
 fn main() {
-    let mut grid = Grid::read(std::path::Path::new("../../exp"));
-    println!("{}", grid);
+    let mut grid = Grid::read(std::path::Path::new("../../input"));
+    //println!("{}", grid);
 
     grid.energize(Beam::start());
-    grid.print_beams();
-    println!();
-    grid.print_energized();
+    //grid.print_beams();
+    //println!();
+    //grid.print_energized();
 
-    println!();
+    //println!();
     println!("number energized fields: {}", grid.count_energized());
 }
 
@@ -157,8 +157,8 @@ impl Grid {
         }
     }
 
-    fn count_energized(&self) -> CorType {
-        let mut count: CorType = 0;
+    fn count_energized(&self) -> u32 {
+        let mut count: u32 = 0;
         for row in &self.tiles {
             for tile in row {
                 if tile.is_energized() {
