@@ -48,6 +48,9 @@ fn main() {
     grid.print_beams();
     println!();
     grid.print_energized();
+
+    println!();
+    println!("number energized fields: {}", grid.count_energized());
 }
 
 
@@ -152,6 +155,18 @@ impl Grid {
                 Some( Cor { col: cor.col+1, ..cor } )
             },
         }
+    }
+
+    fn count_energized(&self) -> CorType {
+        let mut count: CorType = 0;
+        for row in &self.tiles {
+            for tile in row {
+                if tile.is_energized() {
+                    count += 1;
+                }
+            }
+        }
+        count
     }
 
     fn print_energized(&self) {
