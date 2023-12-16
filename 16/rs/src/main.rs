@@ -45,6 +45,8 @@ fn main() {
     println!("{}", grid);
 
     grid.energize(Beam::start());
+    grid.print_beams();
+    println!();
     grid.print_energized();
 }
 
@@ -164,13 +166,22 @@ impl Grid {
             println!();
         }
     }
+
+    fn print_beams(&self) {
+        for row in &self.tiles {
+            for tile in row {
+                print!("{}", tile.to_beam_symbol());
+            }
+            println!();
+        }
+    }
 }
 
 impl fmt::Display for Grid {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for row in &self.tiles {
             for tile in row {
-                write!(f, "{}", tile)?;
+                write!(f, "{}", tile.to_object_symbol())?;
             }
             writeln!(f)?;
         }
@@ -180,17 +191,8 @@ impl fmt::Display for Grid {
 
 impl Tile {
     fn parse(symbol: char) -> Self {
-        let object = match symbol {
-            '.' => Object::Empty,
-            '/' => Object::MirrorSwNe,
-            '\\' => Object::MirrorNwSe,
-            '|' => Object::SplitterVer,
-            '-' => Object::SplitterHor,
-            _ => panic!("invalid tile '{symbol}'"),
-        };
-
         Self {
-            object,
+            object: Object::parse(symbol),
             beam_directions: Vec::new(),
         }
     }
@@ -198,16 +200,54 @@ impl Tile {
     fn is_energized(&self) -> bool {
         !self.beam_directions.is_empty()
     }
+
+    fn to_object_symbol(&self) -> char {
+        self.object.to_symbol()
+    }
+
+    fn to_beam_symbol(&self) -> char {
+        if self.object != Object::Empty {
+            self.object.to_symbol()
+        } else if self.beam_directions.len() == 1 {
+            self.beam_directions[0].to_beam_symbol()
+        } else if self.beam_directions.len() > 1 {
+            self.beam_directions.len().to_string().chars().next().unwrap()
+        } else {
+            '.'
+        }
+    }
 }
 
-impl fmt::Display for Tile {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self.object {
-            Object::Empty       => write!(f, r"."),
-            Object::MirrorSwNe  => write!(f, r"/"),
-            Object::MirrorNwSe  => write!(f, r"\"),
-            Object::SplitterVer => write!(f, r"|"),
-            Object::SplitterHor => write!(f, r"-"),
+impl Direction {
+    fn to_beam_symbol(self) -> char {
+        match self {
+            Self::N => '^',
+            Self::S => 'v',
+            Self::W => '<',
+            Self::E => '>',
+        }
+    }
+}
+
+impl Object {
+    fn parse(symbol: char) -> Self {
+        match symbol {
+            '.' => Object::Empty,
+            '/' => Object::MirrorSwNe,
+            '\\' => Object::MirrorNwSe,
+            '|' => Object::SplitterVer,
+            '-' => Object::SplitterHor,
+            _ => panic!("invalid tile '{symbol}'"),
+        }
+    }
+
+    fn to_symbol(self) -> char {
+        match self {
+            Object::Empty       => '.',
+            Object::MirrorSwNe  => '/',
+            Object::MirrorNwSe  => '\\',
+            Object::SplitterVer => '|',
+            Object::SplitterHor => '-',
         }
     }
 }
