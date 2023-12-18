@@ -7,6 +7,7 @@ static RE_DIG_INSTRUCTION: Lazy<Regex> = Lazy::new(|| Regex::new(r"(?<direction>
 
 type CorType = i8;
 
+#[derive(PartialEq, Eq, Copy, Clone)]
 enum Direction {
     Left, Right, Up, Down
 }
@@ -35,8 +36,10 @@ fn main() {
     let mut cor = Cor::origin();
     let mut border = vec![cor];
     for instruction in instructions {
-        cor += instruction;
-        border.push(cor);
+        for _ in 0..instruction.distance {
+            cor += instruction.direction;
+            border.push(cor);
+        }
     }
     print_cors(&border);
 }
@@ -119,5 +122,25 @@ impl Add<DigInstruction> for Cor {
 impl AddAssign<DigInstruction> for Cor {
     fn add_assign(&mut self, rhs: DigInstruction) {
         *self = *self + rhs;
+    }
+}
+
+impl Add<Direction> for Cor {
+    type Output = Self;
+
+    fn add(self, rhs: Direction) -> Self::Output {
+        self + DigInstruction { distance: 1, direction: rhs, color: Color::black() }
+    }
+}
+
+impl AddAssign<Direction> for Cor {
+    fn add_assign(&mut self, rhs: Direction) {
+        *self = *self + rhs;
+    }
+}
+
+impl Color {
+    fn black() -> Self {
+        Self { red: 0, green: 0, blue: 0 }
     }
 }
