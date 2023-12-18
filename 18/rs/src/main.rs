@@ -34,7 +34,7 @@ struct Cor {
 fn main() {
     let instructions = std::fs::read_to_string("../../exp").expect("input file missing").lines().map(DigInstruction::parse).collect::<Vec<_>>();
     let mut cor = Cor::origin();
-    let mut border = vec![cor];
+    let mut border = Vec::new();
     for instruction in instructions {
         for _ in 0..instruction.distance {
             cor += instruction.direction;
@@ -42,6 +42,7 @@ fn main() {
         }
     }
     print_cors(&border);
+    println!("volume: {}m³", border.len())
 }
 
 fn get_top_left(cors: &[Cor]) -> Cor {
