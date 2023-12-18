@@ -7,9 +7,14 @@ static RE_DIG_INSTRUCTION: Lazy<Regex> = Lazy::new(|| Regex::new(r"(?<direction>
 
 type CorType = i8;
 
-#[derive(PartialEq, Eq, Copy, Clone)]
+#[derive(PartialEq, Eq, Copy, Clone, Debug)]
 enum Direction {
     Left, Right, Up, Down
+}
+
+#[derive(PartialEq, Eq, Copy, Clone, Debug)]
+enum RelativeDirection {
+    Left, Right, Straight
 }
 
 struct Color {
@@ -24,7 +29,7 @@ struct DigInstruction {
     color: Color,
 }
 
-#[derive(PartialEq, Eq, Copy, Clone)]
+#[derive(PartialEq, Eq, Copy, Clone, Debug)]
 struct Cor {
     row: CorType,
     col: CorType,
@@ -42,7 +47,13 @@ fn main() {
         }
     }
     print_cors(&border);
-    println!("volume: {}m³", border.len())
+    println!();
+
+    let filled = fill(&border);
+    print_cors(&filled);
+    println!();
+
+    println!("volume: {}m³", filled.len())
 }
 
 fn get_top_left(cors: &[Cor]) -> Cor {
@@ -74,6 +85,137 @@ fn print_cors(cors: &[Cor]) {
     }
 }
 
+fn fill(cors: &[Cor]) -> Vec<Cor> {
+    let directions = cors.iter().zip(cors.iter().skip(1)).map(|(this, last)| to_direction(last, this)).collect::<Vec<_>>();
+    let mut relative_directions = directions.iter().zip(directions.iter().skip(1)).map(|(this, last)| to_relative_direction(last, this)).collect::<Vec<_>>();
+    relative_directions.insert(0, RelativeDirection::Straight);
+    let inside = if relative_directions.iter().filter(|d| **d==RelativeDirection::Left).count() > relative_directions.iter().filter(|d| **d==RelativeDirection::Right).count() {
+        RelativeDirection::Left
+    } else {
+        RelativeDirection::Right
+    };
+
+    let mut out = Vec::new();
+    for ((cor, direction), relative_direction) in cors.iter().zip(directions).zip(relative_directions) {
+        let cor = *cor;
+        out.push(cor);
+        for rd in if relative_direction == inside {
+            vec![]
+        } else if relative_direction == RelativeDirection::Straight {
+            vec![inside]
+        } else {
+            vec![inside, RelativeDirection::Straight]
+        } {
+            let ad = direction.turn(rd);
+            let mut c = cor + ad;
+            while !cors.contains(&c) {
+                if !out.contains(&c) {
+                    out.push(c);
+                }
+                c += ad;
+            }
+        }
+    }
+    out.push(cors[cors.len()-1]);
+    out
+}
+
+fn to_direction(last: &Cor, this: &Cor) -> Direction {
+    if this == last {
+        panic!("can't get direction between two identical coordinates");
+    }
+    if this.col == last.col {
+        if this.row > last.row {
+            Direction::Down
+        } else {
+            Direction::Up
+        }
+    } else if this.row == last.row {
+        if this.col > last.col {
+            Direction::Right
+        } else {
+            Direction::Left
+        }
+    } else {
+        panic!("is not a straight direction");
+    }
+}
+
+fn to_relative_direction(last: &Direction, this: &Direction) -> RelativeDirection {
+    match (last, this) {
+        (Direction::Left, Direction::Left) => RelativeDirection::Straight,
+        (Direction::Left, Direction::Up) => RelativeDirection::Right,
+        (Direction::Left, Direction::Down) => RelativeDirection::Left,
+        (Direction::Left, Direction::Right) => panic!("180° change not possible"),
+
+        (Direction::Right, Direction::Right) => RelativeDirection::Straight,
+        (Direction::Right, Direction::Down) => RelativeDirection::Right,
+        (Direction::Right, Direction::Up) => RelativeDirection::Left,
+        (Direction::Right, Direction::Left) => panic!("180° change not possible"),
+
+        (Direction::Up, Direction::Up) => RelativeDirection::Straight,
+        (Direction::Up, Direction::Right) => RelativeDirection::Right,
+        (Direction::Up, Direction::Left) => RelativeDirection::Left,
+        (Direction::Up, Direction::Down) => panic!("180° change not possible"),
+
+        (Direction::Down, Direction::Down) => RelativeDirection::Straight,
+        (Direction::Down, Direction::Left) => RelativeDirection::Right,
+        (Direction::Down, Direction::Right) => RelativeDirection::Left,
+        (Direction::Down, Direction::Up) => panic!("180° change not possible"),
+    }
+}
+
+//fn fill(cors: &[Cor]) -> Vec<Cor> {
+//    let mut out = Vec::new();
+//    let tl = get_top_left(cors);
+//    let br = get_bottom_right(cors);
+//
+//    #[derive(PartialEq, Eq)]
+//    enum State { Searching, FoundStart, NotFilling, Filling }
+//    for row in tl.row..br.row {
+//        let mut state = State::Searching;
+//        for col in tl.col..br.col {
+//            let cor = Cor { row, col };
+//            if cors.contains(&cor) {
+//                out.push(cor);
+//                match state {
+//                    State::Searching => print!("S"),
+//                    State::FoundStart => print!("I"),
+//                    State::NotFilling => print!("N"),
+//                    State::Filling => print!("F"),
+//                }
+//                state = match state {
+//                    State::Searching => State::FoundStart,
+//                    State::FoundStart => State::NotFilling,
+//                    State::NotFilling => State::NotFilling,
+//                    State::Filling => State::Searching,
+//                };
+//            } else {
+//                state = match state {
+//                    State::Searching => State::Searching,
+//                    State::FoundStart => State::Filling,
+//                    State::NotFilling => State::Searching,
+//                    State::Filling => State::Filling,
+//                };
+//                if state == State::Filling {
+//                    out.push(cor);
+//                    print!("+");
+//                } else {
+//                    print!(".");
+//                }
+//            }
+//                match state {
+//                    State::Searching => print!("S "),
+//                    State::FoundStart => print!("I "),
+//                    State::NotFilling => print!("N "),
+//                    State::Filling => print!("F "),
+//                }
+//        }
+//        println!();
+//    }
+//    out
+//}
+
 impl DigInstruction {
     fn parse(ln: &str) -> Self {
         let caps = RE_DIG_INSTRUCTION.captures(ln).unwrap_or_else(|| panic!("invalid instruction line '{ln}'"));
@@ -97,6 +239,23 @@ impl Direction {
             "U" => Self::Up,
             "D" => Self::Down,
             _ => panic!("invalid direction '{direction}'"),
+        }
+    }
+
+    fn turn(&self, relative_direction: RelativeDirection) -> Self {
+        match (self, relative_direction) {
+            (Direction::Left, RelativeDirection::Straight) => Direction::Left,
+            (Direction::Left, RelativeDirection::Left) => Direction::Down,
+            (Direction::Left, RelativeDirection::Right) => Direction::Up,
+            (Direction::Right, RelativeDirection::Straight) => Direction::Right,
+            (Direction::Right, RelativeDirection::Left) => Direction::Up,
+            (Direction::Right, RelativeDirection::Right) => Direction::Down,
+            (Direction::Down, RelativeDirection::Straight) => Direction::Down,
+            (Direction::Down, RelativeDirection::Left) => Direction::Right,
+            (Direction::Down, RelativeDirection::Right) => Direction::Left,
+            (Direction::Up, RelativeDirection::Straight) => Direction::Up,
+            (Direction::Up, RelativeDirection::Left) => Direction::Left,
+            (Direction::Up, RelativeDirection::Right) => Direction::Right,
         }
     }
 }
