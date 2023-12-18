@@ -1,3 +1,6 @@
+// running this code takes three and a half minutes
+
+
 use std::ops::{Add, AddAssign};
 
 use regex::Regex;
@@ -5,7 +8,7 @@ use once_cell::sync::Lazy;
 
 static RE_DIG_INSTRUCTION: Lazy<Regex> = Lazy::new(|| Regex::new(r"(?<direction>[LRUD]) *(?<distance>[0-9]+) *\(#(?<red>[0-9A-Fa-f]{2})(?<green>[0-9A-Fa-f]{2})(?<blue>[0-9A-Fa-f]{2})\)").unwrap());
 
-type CorType = i8;
+type CorType = i32;
 
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
 enum Direction {
@@ -37,7 +40,7 @@ struct Cor {
 
 
 fn main() {
-    let instructions = std::fs::read_to_string("../../exp").expect("input file missing").lines().map(DigInstruction::parse).collect::<Vec<_>>();
+    let instructions = std::fs::read_to_string("../../input").expect("input file missing").lines().map(DigInstruction::parse).collect::<Vec<_>>();
     let mut cor = Cor::origin();
     let mut border = Vec::new();
     for instruction in instructions {
@@ -46,12 +49,12 @@ fn main() {
             border.push(cor);
         }
     }
-    print_cors(&border);
-    println!();
+    //print_cors(&border);
+    //println!();
 
     let filled = fill(&border);
-    print_cors(&filled);
-    println!();
+    //print_cors(&filled);
+    //println!();
 
     println!("volume: {}m³", filled.len())
 }
