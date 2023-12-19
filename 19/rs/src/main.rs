@@ -1,6 +1,6 @@
 use macros::load;
 
-load!("~/advent-calendar/19/exp");
+load!("~/advent-calendar/19/input");
 
 fn main() {
     let mut result: u32 = 0;
