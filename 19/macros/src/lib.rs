@@ -18,6 +18,13 @@ pub fn load(filename: TokenStream) -> TokenStream {
             a: CategoryType,
             s: CategoryType,
         }
+
+        fn R(part: &Part) -> bool {
+            false
+        }
+        fn A(part: &Part) -> bool {
+            true
+        }
     };
 
     let mut reading_rules = true;
@@ -27,6 +34,7 @@ pub fn load(filename: TokenStream) -> TokenStream {
             reading_rules = false;
             out.extend(quote!(  ));
         } else if reading_rules {
+            out.extend(workflow_to_rust_code(ln));
         } else {
             let ln = ln.replace('=', ":");
             parts.push(parse_str(&ln).expect("failed to parse part"));
@@ -41,4 +49,30 @@ pub fn load(filename: TokenStream) -> TokenStream {
     ));
 
     out.into()
+}
+
+fn workflow_to_rust_code(workflow: &str) -> proc_macro2::TokenStream {
+    let mut out = String::new();
+    out.push_str("fn r#");
+    let workflow = workflow.strip_suffix('}').unwrap();
+    let i = workflow.chars().position(|c| c=='{').unwrap();
+    out.push_str(&workflow[0..i]);
+    out.push_str("(part: &Part) -> bool {\n");
+    for x in workflow[i+1..].split(',') {
+        if x.contains(':') {
+            out.push_str("    if part.");
+            let (cond, next) = x.split_once(':').unwrap();
+            out.push_str(cond);
+            out.push_str(" { return r#");
+            out.push_str(next);
+            out.push_str("(part); }\n")
+        } else {
+            out.push_str("    return ");
+            out.push_str(x);
+            out.push_str("(part);\n")
+        }
+    }
+    out.push('}');
+    //println!("{}", out);
+    parse_str(&out).expect("failed to parse workflow")
 }
