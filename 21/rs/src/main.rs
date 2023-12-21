@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 
-type CorType = u8;
+type CorType = i16;
+type SizeType = u8;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 enum Tile {
@@ -11,8 +12,8 @@ enum Tile {
 
 struct Map {
     rows: Vec<Vec<Tile>>,
-    number_rows: CorType,
-    number_cols: CorType,
+    number_rows: SizeType,
+    number_cols: SizeType,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
@@ -23,11 +24,11 @@ struct Cor {
 
 
 fn main() {
-    let map = Map::parse("../../input");
+    let map = Map::parse("../../exp");
     let mut pos = HashSet::new();
     pos.insert(map.get_start_cor());
 
-    for _step in 0..64 {
+    for _step in 0..10 {
         pos = pos.iter().flat_map(|c| map.get_next_cors(*c)).collect();
         //map.print_positions(&pos);
         //println!();
@@ -49,8 +50,8 @@ impl Map {
         for row in &rows[1..] {
             assert_eq!(row.len(), number_cols);
         }
-        let number_rows: CorType = number_rows.try_into().unwrap();
-        let number_cols: CorType = number_cols.try_into().unwrap();
+        let number_rows: SizeType = number_rows.try_into().unwrap();
+        let number_cols: SizeType = number_cols.try_into().unwrap();
 
         Self { rows, number_rows, number_cols }
     }
@@ -71,24 +72,16 @@ impl Map {
 
     fn get_next_cors(&self, cor: Cor) -> Vec<Cor> {
         let mut out = Vec::new();
-        if cor.col > 0 {
-            out.push(Cor{col: cor.col-1, ..cor});
-        }
-        if cor.col < self.number_cols - 1 {
-            out.push(Cor{col: cor.col+1, ..cor});
-        }
-        if cor.row > 0 {
-            out.push(Cor{row: cor.row-1, ..cor});
-        }
-        if cor.row < self.number_rows - 1 {
-            out.push(Cor{row: cor.row+1, ..cor});
-        }
+        out.push(Cor{col: cor.col-1, ..cor});
+        out.push(Cor{col: cor.col+1, ..cor});
+        out.push(Cor{row: cor.row-1, ..cor});
+        out.push(Cor{row: cor.row+1, ..cor});
         out.retain(|c| self.get(c) != Tile::Rock);
         out
     }
 
     fn get(&self, cor: &Cor) -> Tile {
-        self.rows[cor.row as usize][cor.col as usize]
+        self.rows[(cor.row % self.number_rows as CorType) as usize][(cor.col % self.number_cols as CorType) as usize]
     }
 
     fn print_positions(&self, pos: &HashSet<Cor>) {
