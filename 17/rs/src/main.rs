@@ -108,7 +108,7 @@ impl HeatLossMap {
             same_direction_counter: if direction == last_step.direction {
                 last_step.same_direction_counter + 1
             } else {
-                last_step.same_direction_counter
+                0
             },
         }
     }
