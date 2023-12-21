@@ -1,4 +1,5 @@
 use std::collections::HashSet;
+use home_dir::HomeDirExt;
 
 type CorType = i16;
 type SizeType = u8;
@@ -41,7 +42,7 @@ fn main() {
 impl Map {
     fn parse(filename: &str) -> Self {
         let mut rows = Vec::new();
-        for ln in std::fs::read_to_string(filename).unwrap_or_else(|_| panic!("input file missing '{}'", filename)).lines() {
+        for ln in std::fs::read_to_string(filename.expand_home().unwrap()).unwrap_or_else(|_| panic!("input file missing '{}'", filename)).lines() {
             rows.push(ln.chars().map(Tile::parse).collect::<Vec<_>>());
         }
 
@@ -109,5 +110,28 @@ impl Tile {
             'S' => Self::Start,
             _ => panic!("unknown tile '{}'", symbol),
         }
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use crate::{Map,Tile,Cor,CorType};
+
+    #[test]
+    fn test_get_simple_garden() {
+        let map = Map::parse("~/advent-calendar/21/exp");
+        assert_eq!(map.get(&Cor{row: 0, col: 0}), Tile::Garden);
+        assert_eq!(map.get(&Cor{row: 2, col: 1}), Tile::Rock);
+        assert_eq!(map.get(&Cor{row: 5, col: 5}), Tile::Start);
+    }
+
+    #[test]
+    fn test_get_infinite_garden() {
+        let map = Map::parse("~/advent-calendar/21/exp");
+        assert_eq!(map.get(&Cor{row: -1, col: 0}), Tile::Garden);
+        assert_eq!(map.get(&Cor{row: 0, col: -1}), Tile::Garden);
+        assert_eq!(map.get(&Cor{row: map.number_rows as CorType, col: 0}), Tile::Garden);
+        assert_eq!(map.get(&Cor{row: 0, col: map.number_cols as CorType}), Tile::Garden);
     }
 }
