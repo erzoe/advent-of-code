@@ -29,7 +29,7 @@ fn main() {
     let mut pos = HashSet::new();
     pos.insert(map.get_start_cor());
 
-    for _step in 0..10 {
+    for _step in 0..500 {
         pos = pos.iter().flat_map(|c| map.get_next_cors(*c)).collect();
         //map.print_positions(&pos);
         //println!();
