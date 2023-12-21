@@ -82,7 +82,20 @@ impl Map {
     }
 
     fn get(&self, cor: &Cor) -> Tile {
-        self.rows[(cor.row % self.number_rows as CorType) as usize][(cor.col % self.number_cols as CorType) as usize]
+        let mut row = cor.row;
+        let mut col = cor.col;
+
+        while row < 0 {
+            row += self.number_rows as CorType;
+        }
+        while col < 0 {
+            col += self.number_cols as CorType;
+        }
+
+        row %= self.number_rows as CorType;
+        col %= self.number_cols as CorType;
+
+        self.rows[row as usize][col as usize]
     }
 
     fn print_positions(&self, pos: &HashSet<Cor>) {
