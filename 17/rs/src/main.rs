@@ -36,15 +36,19 @@ fn main() {
     let mut steps = vec![Step::first()];
     while !steps.is_empty() {
         for step in steps.clone() {
-            println!("steps before loop body: {:?}", steps);
             steps = Vec::new();
             for next_step in map.next_steps(&step) {
                 if ways.add(next_step.clone()) {
-                    steps.push(next_step);
+                    steps.push(next_step.clone());
+                    print!("[YES] ");
+                } else {
+                    print!("[NO ] ");
                 }
+                println!("{:?}", next_step);
             }
-            println!("steps after loop body: {:?}", steps);
+            println!();
         }
+        println!("==========");
     }
     println!("{}", ways);
     let result = ways.steps.last().unwrap().last().unwrap().iter().map(|step| step.heat_loss).min().unwrap();
