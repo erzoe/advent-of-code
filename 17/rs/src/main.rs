@@ -94,7 +94,7 @@ impl HeatLossMap {
         if last_step.cor.col > 0 {
             out.push(self.next_step(last_step, Direction::W));
         }
-        out.retain(|s| s.same_direction_counter < 3);
+        out.retain(|s| s.same_direction_counter < 3 && s.direction != last_step.direction.opposite());
 
         out
     }
@@ -174,5 +174,16 @@ impl std::fmt::Display for Ways {
             writeln!(f)?;
         }
         Ok(())
+    }
+}
+
+impl Direction {
+    fn opposite(&self) -> Self {
+        match self {
+            Self::S => Self::N,
+            Self::E => Self::W,
+            Self::N => Self::S,
+            Self::W => Self::E,
+        }
     }
 }
