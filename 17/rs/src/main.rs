@@ -42,6 +42,7 @@ fn main() {
             }
         }
     }
+    println!("{}", ways);
     let result = ways.steps.last().unwrap().last().unwrap().iter().map(|step| step.heat_loss).min().unwrap();
     println!("min heat loss: {}", result);
 }
@@ -153,5 +154,17 @@ impl Ways {
             return true;
         }
         false
+    }
+}
+
+impl std::fmt::Display for Ways {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        for row in &self.steps {
+            for cell in row {
+                write!(f, "{} ", cell.len())?;
+            }
+            writeln!(f)?;
+        }
+        Ok(())
     }
 }
