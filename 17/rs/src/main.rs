@@ -37,16 +37,16 @@ fn main() {
     while !steps.is_empty() {
         for step in steps.clone() {
             steps = Vec::new();
+            println!("{:?}", step);
             for next_step in map.next_steps(&step) {
                 if ways.add(next_step.clone()) {
                     steps.push(next_step.clone());
-                    print!("[YES] ");
+                    print!("  -> [YES] ");
                 } else {
-                    print!("[NO ] ");
+                    print!("  -> [NO ] ");
                 }
                 println!("{:?}", next_step);
             }
-            println!();
         }
         println!("==========");
     }
