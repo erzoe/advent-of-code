@@ -23,14 +23,14 @@ struct Cor {
 
 
 fn main() {
-    let map = Map::parse("../../exp");
+    let map = Map::parse("../../input");
     let mut pos = HashSet::new();
     pos.insert(map.get_start_cor());
 
-    for _step in 0..6 {
+    for _step in 0..64 {
         pos = pos.iter().flat_map(|c| map.get_next_cors(*c)).collect();
-        map.print_positions(&pos);
-        println!();
+        //map.print_positions(&pos);
+        //println!();
     }
 
     println!("result: {}", pos.len());
