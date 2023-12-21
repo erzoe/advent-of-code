@@ -17,7 +17,7 @@ enum Direction {
     N, S, W, E
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct Step {
     cor: Cor,
     direction: Direction,
@@ -34,12 +34,16 @@ fn main() {
     let map = HeatLossMap::parse("../../exp");
     let mut ways = Ways::new(&map);
     let mut steps = vec![Step::first()];
-    for step in steps.clone() {
-        steps = Vec::new();
-        for next_step in map.next_steps(&step) {
-            if ways.add(next_step.clone()) {
-                steps.push(next_step);
+    while !steps.is_empty() {
+        for step in steps.clone() {
+            println!("steps before loop body: {:?}", steps);
+            steps = Vec::new();
+            for next_step in map.next_steps(&step) {
+                if ways.add(next_step.clone()) {
+                    steps.push(next_step);
+                }
             }
+            println!("steps after loop body: {:?}", steps);
         }
     }
     println!("{}", ways);
