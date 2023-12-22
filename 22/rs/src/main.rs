@@ -1,4 +1,4 @@
-type CorType = u8;
+type CorType = u16;
 
 #[derive(PartialEq, Eq, Clone, Debug)]
 struct Cor {
@@ -20,14 +20,14 @@ struct Pile {
 
 
 fn main() {
-    let mut pile = Pile::read("../../exp");
-    pile.print_x(); println!();
-    pile.print_y(); println!();
+    let mut pile = Pile::read("../../input");
+    //pile.print_x(); println!();
+    //pile.print_y(); println!();
 
-    println!("after gravity has done it's thing:");
+    //println!("after gravity has done it's thing:");
     pile.let_gravity_do_its_thing();
-    pile.print_x(); println!();
-    pile.print_y();
+    //pile.print_x(); println!();
+    //pile.print_y();
 
     let mut result = 0;
     for brick in &pile.bricks {
