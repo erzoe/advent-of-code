@@ -1,13 +1,13 @@
 type CorType = u8;
 
-#[derive(Clone, Debug)]
+#[derive(PartialEq, Eq, Clone, Debug)]
 struct Cor {
     x: CorType,
     y: CorType,
     z: CorType,
 }
 
-#[derive(Clone, Debug)]
+#[derive(PartialEq, Eq, Clone, Debug)]
 struct Brick {
     name: char,
     c1: Cor,
@@ -28,6 +28,14 @@ fn main() {
     pile.let_gravity_do_its_thing();
     pile.print_x(); println!();
     pile.print_y();
+
+    let mut result = 0;
+    for brick in &pile.bricks {
+        if pile.all_supported_bricks_have_other_supporters(brick) {
+            result += 1;
+        }
+    }
+    println!("result: {}", result);
 }
 
 
@@ -57,6 +65,23 @@ impl Pile {
             //println!("    lower {} by {} - {}", brick.name, brick.min_z(), z);
             self.bricks[i] = brick.lower(brick.min_z() - z);
         }
+    }
+
+    fn all_supported_bricks_have_other_supporters(&self, brick: &Brick) -> bool {
+        for supported in self.bricks.iter().filter(|b| brick.supports(b)) {
+            if !self.has_other_supporters(supported, brick) {
+                return false;
+            }
+        }
+        true
+    }
+    fn has_other_supporters(&self, brick: &Brick, supporter: &Brick) -> bool {
+        for b in &self.bricks {
+            if b != supporter && b.supports(brick) {
+                return true;
+            }
+        }
+        false
     }
 
     fn print_x(&self) {
@@ -194,6 +219,10 @@ impl Brick {
            self.min_x() <= other.max_x() && self.max_x() >= other.min_x()
         && self.min_y() <= other.max_y() && self.max_y() >= other.min_y()
         && self.max_z() < other.min_z()
+    }
+
+    fn supports(&self, other: &Self) -> bool {
+        self.is_under(other) && self.max_z() + 1 == other.min_z()
     }
 
     fn lower(&self, z: CorType) -> Self {
