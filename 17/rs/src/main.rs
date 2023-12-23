@@ -1,3 +1,6 @@
+//WARNING: this program takes 30 minutes to run
+
+
 type HeatLoss = u8;
 type CumulatedHeatLoss = u32;
 type CorType = u8;
@@ -31,7 +34,7 @@ struct Ways {
 
 
 fn main() {
-    let map = HeatLossMap::parse("../../exp");
+    let map = HeatLossMap::parse("../../input");
     let mut ways = Ways::new(&map);
     let mut steps = vec![Step::first()];
     while !steps.is_empty() {
@@ -40,20 +43,20 @@ fn main() {
             steps = Vec::new();
             iter
         } {
-            println!("{:?}", step);
+            //println!("{:?}", step);
             for next_step in map.next_steps(&step) {
                 if ways.add(next_step.clone()) {
                     steps.push(next_step.clone());
-                    print!("  -> [YES] ");
+                    //print!("  -> [YES] ");
                 } else {
-                    print!("  -> [NO ] ");
+                    //print!("  -> [NO ] ");
                 }
-                println!("{:?}", next_step);
+                //println!("{:?}", next_step);
             }
         }
-        println!("==========");
+        //println!("==========");
     }
-    println!("{}", ways);
+    //println!("{}", ways);
     let result = ways.steps.last().unwrap().last().unwrap().iter().map(|step| step.heat_loss).min().unwrap();
     println!("min heat loss: {}", result);
 }
