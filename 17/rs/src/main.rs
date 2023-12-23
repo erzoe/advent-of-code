@@ -35,8 +35,11 @@ fn main() {
     let mut ways = Ways::new(&map);
     let mut steps = vec![Step::first()];
     while !steps.is_empty() {
-        for step in steps.clone() {
+        for step in {
+            let iter = steps.clone();
             steps = Vec::new();
+            iter
+        } {
             println!("{:?}", step);
             for next_step in map.next_steps(&step) {
                 if ways.add(next_step.clone()) {
