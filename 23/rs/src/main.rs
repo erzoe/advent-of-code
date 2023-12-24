@@ -104,7 +104,7 @@ impl Map {
             }
             let next_cor = step.cor + d;
             let next_tile = self.get(&next_cor);
-            if next_tile != Tile::Forest || next_tile == Tile::Slope(d) {
+            if next_tile == Tile::Path || next_tile == Tile::Slope(d) {
                 out.push(Step{ cor: next_cor, direction: d });
             }
         }
