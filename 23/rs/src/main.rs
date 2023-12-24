@@ -42,7 +42,7 @@ fn main() {
         let mut hike = unfinished_hikes.pop().unwrap();
         loop {
             let mut next_steps = map.get_next(hike.steps.last().unwrap());
-            next_steps.retain(|next_step| !hike.steps.iter().all(|old_step| old_step.cor != next_step.cor));
+            next_steps.retain(|next_step| hike.steps.iter().all(|old_step| old_step.cor != next_step.cor));
             for s in next_steps.iter().skip(1) {
                 unfinished_hikes.push({
                     let mut cloned_hike = hike.clone();
@@ -67,7 +67,7 @@ fn main() {
     }
 
     finished_hikes.sort_by_key(|hike| hike.steps.len());
-    println!("longest hike has {} steps", finished_hikes.get(0).expect("no path found").steps.len());
+    println!("longest hike has {} steps", finished_hikes.last().expect("no path found").steps.len());
 }
 
 
@@ -99,9 +99,12 @@ impl Map {
     fn get_next(&self, step: &Step) -> Vec<Step> {
         let mut out = Vec::new();
         for d in [Direction::S, Direction::E, Direction::W, Direction::N] {
+            if d == step.direction.opposite() {
+                continue;
+            }
             let next_cor = step.cor + d;
             let next_tile = self.get(&next_cor);
-            if next_tile == Tile::Forest || next_tile == Tile::Slope(d) {
+            if next_tile != Tile::Forest || next_tile == Tile::Slope(d) {
                 out.push(Step{ cor: next_cor, direction: d });
             }
         }
@@ -145,8 +148,8 @@ impl Tile {
             '.' => Self::Path,
             '^' => Self::Slope(Direction::N),
             'v' => Self::Slope(Direction::S),
-            '>' => Self::Slope(Direction::W),
-            '<' => Self::Slope(Direction::E),
+            '<' => Self::Slope(Direction::W),
+            '>' => Self::Slope(Direction::E),
             _ => panic!("unknown tile '{}'", symbol),
         }
     }
@@ -157,8 +160,8 @@ impl Tile {
             Self::Path => '.',
             Self::Slope(Direction::N) => '^',
             Self::Slope(Direction::S) => 'v',
-            Self::Slope(Direction::W) => '>',
-            Self::Slope(Direction::E) => '<',
+            Self::Slope(Direction::W) => '<',
+            Self::Slope(Direction::E) => '>',
         }
     }
 }
@@ -168,10 +171,21 @@ impl std::ops::Add<Direction> for Cor {
     type Output = Cor;
     fn add(self, other: Direction) -> Self::Output {
         match other {
-            Direction::N => Cor { row: self.row + 1, ..self },
-            Direction::S => Cor { row: self.row - 1, ..self },
-            Direction::W => Cor { col: self.col + 1, ..self },
-            Direction::E => Cor { col: self.col - 1, ..self },
+            Direction::N => Cor { row: self.row - 1, ..self },
+            Direction::S => Cor { row: self.row + 1, ..self },
+            Direction::W => Cor { col: self.col - 1, ..self },
+            Direction::E => Cor { col: self.col + 1, ..self },
+        }
+    }
+}
+
+impl Direction {
+    fn opposite(&self) -> Self {
+        match self {
+            Direction::N => Direction::S,
+            Direction::S => Direction::N,
+            Direction::W => Direction::E,
+            Direction::E => Direction::W,
         }
     }
 }
