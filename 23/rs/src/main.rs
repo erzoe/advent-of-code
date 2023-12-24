@@ -35,7 +35,7 @@ struct Hike {
 
 
 fn main() {
-    let map = Map::read("../../exp");
+    let map = Map::read("../../input");
     let mut unfinished_hikes = vec![Hike::new(map.get_start())];
     let mut finished_hikes = Vec::new();
     while !unfinished_hikes.is_empty() {
@@ -64,9 +64,9 @@ fn main() {
     }
 
     finished_hikes.sort_by_key(|hike| hike.steps.len());
-    println!("longest hike:");
+    //println!("longest hike:");
     let longest_hike = finished_hikes.last().expect("no path found");
-    map.print_hike(&longest_hike);
+    //map.print_hike(&longest_hike);
     println!("longest hike has {} steps", longest_hike.steps.len());
 }
 
