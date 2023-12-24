@@ -58,16 +58,16 @@ fn main() {
                 }
             } else {
                 // dead end, drop current route, continue with next possibility
-                println!("dropping hike ending in dead end:");
-                map.print_hike(&hike);
-                println!();
                 break;
             }
         }
     }
 
     finished_hikes.sort_by_key(|hike| hike.steps.len());
-    println!("longest hike has {} steps", finished_hikes.last().expect("no path found").steps.len());
+    println!("longest hike:");
+    let longest_hike = finished_hikes.last().expect("no path found");
+    map.print_hike(&longest_hike);
+    println!("longest hike has {} steps", longest_hike.steps.len());
 }
 
 
@@ -129,8 +129,19 @@ impl Map {
         for row in 0..self.rows() {
             for col in 0..self.cols() {
                 print!("{}", {
-                    if hike.steps.iter().any(|s| s.cor == Cor{row, col}) {
-                        'O'
+                    if let Some(step) = hike.steps.iter().filter(|s| s.cor == Cor{row, col}).next() {
+                        let tile = self.get(&Cor{row, col});
+                        if tile == Tile::Forest {
+                            'X'
+                        } else if let Tile::Slope(_) = tile {
+                            tile.to_symbol()
+                        } else {
+                        match step.direction {
+                            Direction::N => '↑',
+                            Direction::S => '↓',
+                            Direction::W => '←',
+                            Direction::E => '→',
+                        }}
                     } else {
                         self.get(&Cor{row, col}).to_symbol()
                     }
