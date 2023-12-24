@@ -58,6 +58,9 @@ fn main() {
                 }
             } else {
                 // dead end, drop current route, continue with next possibility
+                println!("dropping hike ending in dead end:");
+                map.print_hike(&hike);
+                println!();
                 break;
             }
         }
@@ -118,6 +121,21 @@ impl Map {
     fn cols(&self) -> CorType {
         self.map[0].len() as CorType
     }
+
+    fn print_hike(&self, hike: &Hike) {
+        for row in 0..self.rows() {
+            for col in 0..self.cols() {
+                print!("{}", {
+                    if hike.steps.iter().any(|s| s.cor == Cor{row, col}) {
+                        'O'
+                    } else {
+                        self.get(&Cor{row, col}).to_symbol()
+                    }
+                });
+            }
+            println!();
+        }
+    }
 }
 
 impl Tile {
@@ -130,6 +148,17 @@ impl Tile {
             '>' => Self::Slope(Direction::W),
             '<' => Self::Slope(Direction::E),
             _ => panic!("unknown tile '{}'", symbol),
+        }
+    }
+
+    fn to_symbol(self) -> char {
+        match self {
+            Self::Forest => '#',
+            Self::Path => '.',
+            Self::Slope(Direction::N) => '^',
+            Self::Slope(Direction::S) => 'v',
+            Self::Slope(Direction::W) => '>',
+            Self::Slope(Direction::E) => '<',
         }
     }
 }
