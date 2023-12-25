@@ -1,3 +1,5 @@
+//WARNING: don't try to run this. It does not yield a solution within 22 hours.
+
 type CorType = u8;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -104,7 +106,7 @@ impl Map {
             }
             let next_cor = step.cor + d;
             let next_tile = self.get(&next_cor);
-            if next_tile == Tile::Path || next_tile == Tile::Slope(d) {
+            if next_tile != Tile::Forest {
                 out.push(Step{ cor: next_cor, direction: d });
             }
         }

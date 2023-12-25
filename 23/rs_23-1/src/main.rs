@@ -1,3 +1,5 @@
+// takes 10 seconds to run
+
 type CorType = u8;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
