@@ -1,4 +1,4 @@
-//WARNING: don't try to run this. It does not yield a solution within 22 hours.
+// the correct solution was printed within quarter of an hour but I don't know how long this program would have taken to try all possible ways
 
 type CorType = u8;
 
