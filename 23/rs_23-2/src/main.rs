@@ -39,7 +39,7 @@ struct Hike {
 fn main() {
     let map = Map::read("../../input");
     let mut unfinished_hikes = vec![Hike::new(map.get_start())];
-    let mut finished_hikes = Vec::new();
+    let mut longest_hike: Option<Hike> = None;
     while !unfinished_hikes.is_empty() {
         let mut hike = unfinished_hikes.pop().unwrap();
         loop {
@@ -55,7 +55,10 @@ fn main() {
             if let Some(s) = next_steps.get(0) {
                 hike.step(*s);
                 if map.is_end(&s.cor) {
-                    finished_hikes.push(hike);
+                    if longest_hike.is_none() || hike.steps.len() > longest_hike.as_ref().unwrap().steps.len() {
+                        println!("found new candidate with {} steps", hike.steps.len());
+                        longest_hike = Some(hike);
+                    }
                     break;
                 }
             } else {
@@ -65,9 +68,8 @@ fn main() {
         }
     }
 
-    finished_hikes.sort_by_key(|hike| hike.steps.len());
     //println!("longest hike:");
-    let longest_hike = finished_hikes.last().expect("no path found");
+    let longest_hike = longest_hike.expect("no path found");
     //map.print_hike(&longest_hike);
     println!("longest hike has {} steps", longest_hike.steps.len());
 }
