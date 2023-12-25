@@ -133,7 +133,7 @@ impl Map {
         for row in 0..self.rows() {
             for col in 0..self.cols() {
                 print!("{}", {
-                    if let Some(step) = hike.steps.iter().filter(|s| s.cor == Cor{row, col}).next() {
+                    if let Some(step) = hike.steps.iter().find(|s| s.cor == Cor{row, col}) {
                         let tile = self.get(&Cor{row, col});
                         if tile == Tile::Forest {
                             'X'
